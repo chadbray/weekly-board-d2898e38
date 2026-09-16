@@ -1,0 +1,42 @@
+name: Add apple picking event
+
+on:
+  push:
+    paths:
+      - apple-picking-update-trigger.txt
+
+permissions:
+  contents: write
+
+jobs:
+  add-event:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add apple picking event
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text()
+          event = "ONCE.push({date:'2026-10-03',title:'Apple picking in Wurmtal – KGS school',person:'penelope',timeLabel:'09:45',note:'Meet at 09:45, Wiesenstraße'});"
+          marker = "if(!await unlockCalendar())return;"
+          if event not in s:
+              if marker not in s:
+                  raise SystemExit('Dashboard unlock marker not found')
+              s = s.replace(marker, marker + event, 1)
+              p.write_text(s)
+          else:
+              print('Event already present')
+          PY
+      - name: Commit dashboard change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Add KGS apple picking event for 3 Oct 2026"
+            git push
+          fi
