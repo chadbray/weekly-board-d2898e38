@@ -25,3 +25,5 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+
+# Force a fresh Pages deployment after calendar updates.
