@@ -1,0 +1,40 @@
+name: Ensure KGS apple picking event in all views
+
+on:
+  push:
+    paths:
+      - kgs-event-sync-trigger.txt
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add event to dashboard views
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          event = "ONCE.push({date:'2026-10-03',title:'Apple picking in Wurmtal – KGS school',person:'penelope',timeLabel:'09:45',note:'Meet at 09:45, Wiesenstraße'});"
+          marker = "if(!await unlockCalendar())return;"
+          for name in ('index.html', 'landscape.html'):
+              p = Path(name)
+              s = p.read_text()
+              if event not in s:
+                  if marker not in s:
+                      raise SystemExit(f'Unlock marker not found in {name}')
+                  p.write_text(s.replace(marker, marker + event, 1))
+          PY
+      - name: Commit dashboard views
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html landscape.html
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Ensure KGS apple picking event in all dashboard views"
+            git push
+          fi
