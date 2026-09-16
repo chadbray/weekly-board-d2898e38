@@ -55,7 +55,7 @@
   <p class="footer">Private encrypted calendar · Refreshes when reopened</p>
 </main><script src="secure-calendar.js"></script><script>
 (async()=>{
-if(!await unlockCalendar())return;ONCE.push({date:'2026-10-03',title:'Apple picking in Wurmtal – KGS school',person:'penelope',timeLabel:'09:45',note:'Meet at 09:45, Wiesenstraße'});ONCE.push({date:'2026-09-30',title:'No school or OGS',person:'penelope'});
+if(!await unlockCalendar())return;ONCE.push({date:'2026-10-07',title:'Kita VL & Elternabend',person:'josie',timeLabel:'18:00'});ONCE.push({date:'2026-10-03',title:'Apple picking in Wurmtal – KGS school',person:'penelope',timeLabel:'09:45',note:'Meet at 09:45, Wiesenstraße'});ONCE.push({date:'2026-09-30',title:'No school or OGS',person:'penelope'});
 document.querySelector('#unlock').hidden=true;document.querySelector('#dashboard').hidden=false;
 let WEATHER={};
 async function refreshWeather(){try{WEATHER=await getWeather();render()}catch(error){console.warn('Weather unavailable')}}
