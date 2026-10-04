@@ -1,0 +1,42 @@
+# Private calendar material must stay outside this checkout.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.key.json
+*calendar-key*
+*calendar.secret*
+*calendar-secret*
+*calendar.decrypted*
+*calendar-decrypted*
+*calendar.plaintext*
+*calendar-plaintext*
+*calendar.private*
+*calendar-private*
+*payload.decrypted*
+*payload-decrypted*
+*payload.plaintext*
+*payload-plaintext*
+*payload.private*
+*payload-private*
+calendar.json
+payload.json
+plaintext.json
+private.json
+secrets.json
+secrets/
+private/
+.decrypted/
+plaintext/
+*.bak
+*.backup
+*.swp
+*.swo
+*~
+.calendar-envelope-*.tmp
+# Synthetic local test fixtures
+.calendar-tests-*/
+
+# Staged GitHub Pages assets
+_site/

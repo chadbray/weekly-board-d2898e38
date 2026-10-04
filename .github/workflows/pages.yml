@@ -1,4 +1,4 @@
-name: Deploy encrypted dashboard
+name: Check and deploy encrypted dashboard
 on:
   push:
     branches: [main]
@@ -18,12 +18,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check public files and helper tests
+        run: |
+          node tools/calendar.mjs check
+          node --test tools/calendar.test.mjs
+      - name: Stage only website assets
+        run: |
+          mkdir -p _site
+          cp index.html secure-calendar.js robots.txt .nojekyll _site/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
-
-# Force a fresh Pages deployment after calendar updates.
