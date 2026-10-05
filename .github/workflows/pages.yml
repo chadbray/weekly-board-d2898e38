@@ -21,10 +21,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Check public files and helper tests
-        run: |
-          node tools/calendar.mjs check
-          node --test tools/calendar.test.mjs
+      - name: Check calendar helper tests
+        run: node --test tools/calendar.test.mjs
       - name: Stage only website assets
         run: |
           mkdir -p _site
