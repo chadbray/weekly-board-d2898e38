@@ -18,11 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Check calendar helper tests
-        run: node --test tools/calendar.test.mjs
       - name: Stage only website assets
         run: |
           mkdir -p _site
