@@ -65,6 +65,8 @@ async function unlockCalendar(){
     );
     const data=JSON.parse(new TextDecoder().decode(plaintext));
     PEOPLE=data.people;ONCE=data.once;BIRTHDAYS=data.birthdays;REPEATS=data.repeats;SETTINGS=data.settings;
+    // One-off dashboard update: the 6 Oct 2026 Penelope Bezugsziehertreffen was rescheduled.
+    ONCE=ONCE.filter(item=>!(item.date==='2026-10-06'&&item.person==='penelope'&&item.title==='Bezugsziehertreffen'));
     DASHBOARD_ACCESS_KEY=candidate;
     preserveSecretLinks();
     return true;
