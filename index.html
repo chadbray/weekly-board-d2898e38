@@ -36,24 +36,13 @@
 
   </style>
 </head>
-<body><section class="unlock-shell" id="unlock">
-    <div class="unlock-card">
-      <div class="unlock-icon" aria-hidden="true">🔒</div>
-      <h1>Private dashboard</h1>
-      <p>Open the private link shared with you, or paste its access key below.</p>
-      <form class="unlock-form" id="unlock-form">
-        <input id="access-key" type="password" autocomplete="off" spellcheck="false" aria-label="Access key" placeholder="Private link or access key">
-        <button type="submit">Open dashboard</button>
-      </form>
-      <p class="unlock-error" id="unlock-error" hidden></p>
-    </div>
-  </section><main id="dashboard" hidden>
+<body><main id="dashboard">
   <header><p class="eyebrow">FAMILY DASHBOARD</p><h1>Our week</h1><p class="range" id="range"></p></header>
   <section class="legend" id="legend"></section>
   <nav class="nav"><button id="prev" aria-label="Previous page">‹</button><button id="today">Today + 6 days</button><button id="next" aria-label="Next page">›</button></nav>
   <section class="week" id="week"></section>
   <p class="footer">Family calendar · Refreshes when reopened</p>
-</main><script src="secure-calendar.js"></script><script>
+</main><script src="secure-calendar.js?v=20261005-2"></script><script>
 (async()=>{
 if(!await unlockCalendar())return;
 document.querySelector('#unlock').hidden=true;document.querySelector('#dashboard').hidden=false;
