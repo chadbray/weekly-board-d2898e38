@@ -833,7 +833,7 @@ let SETTINGS={
     "2030-12-26": "2. Weihnachtstag"
   }
 };
-async function unlockCalendar(){ return true; }\n
+async function unlockCalendar(){ return true; }
 const pad=n=>String(n).padStart(2,'0'),iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),parse=s=>new Date(s+'T12:00:00'),monday=d=>{d=new Date(d);d.setHours(12,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d},mins=s=>{let[h,m]=s.split(':').map(Number);return h*60+m},dur=(a,b)=>{if(!a||!b)return'';let n=mins(b)-mins(a);return n>=60?Math.floor(n/60)+'h'+(n%60?' '+n%60+'m':''):n+'m'};
 function holidayFor(date){return (SETTINGS.holidays||{})[iso(date)]||''}
 function itemsFor(date){const key=iso(date),items=ONCE.filter(item=>item.date===key).map(item=>({...item}));for(const birthday of BIRTHDAYS)if(key.slice(5)===birthday.md)items.push({date:key,title:birthday.title,person:'family',birthday:true});for(const repeat of REPEATS){const {excludedDates=[],overrides={},...event}=repeat;if(date.getDay()===repeat.weekday&&date>=parse(repeat.from)&&date<=parse(repeat.to)&&!excludedDates.includes(key))items.push({...event,...(overrides[key]||{}),date:key});}return items.sort((a,b)=>(a.start||'').localeCompare(b.start||''));}
