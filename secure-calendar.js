@@ -1,91 +1,836 @@
-/*
- * Encrypted family dashboard runtime.
- * Calendar content is AES-256-GCM ciphertext. The key is supplied only in the
- * URL fragment and is never sent to GitHub or the weather service.
- * This encrypted payload is the canonical data source. Maintenance decrypts
- * locally; plaintext and the access key must never be committed.
- */
-const SECURE_PAYLOAD={"version":1,"algorithm":"AES-GCM","iv":"wEDuL0ZPppBNpuZ1","ciphertext":"rHRoum6vcEH3QXbsApySZUZZU57mPI5jwJbBfLBVlWeV4HqkSFDcVrT2AOpbF2MsJAKGHZxvbsA_ndVpwZ-aBDOt5rdBuOhIxobtYmZidwklWvR7wXyVpT35HPe-3nbsRJTUQR7sz5G-vD_MCC0RIrf7OzgoGBmrEt8FTSC6V8mitx8uQxuRm9PJDzu0O0ZELEaADd0kVS8p9knc9JYoYS6p0gEUXwOZebFhkHt0SSEQaZbXHJXP2wgAfCN4auDO_nOxbKDVPPwdATN-HsFAizlZg2CFe2G00fcAIANsB4IhXMqpSRsG53JSlPyruKnrwgPQcfkiP29mefD5-20I2dRpm1u17XUwKI5ouAV7iTkYqRyZ_PeuAGlM-kJpZHealGe2tad0tQUQUTyDq6P0EXb48jAsnNi7JLoupEkg6_k5xaQYLupPreIGIp-lHXVs7ZYm-qlpoHR3qGLh8QQYFNRIq-bYuG2kG4sQ7EF1VWiV-u0fw2DggT0t70ZvNGcnzaMjgbFaMQa56nweiiHE3XDmUIbTiTMxz79Flwp2gR249ImHYLw7wzVnmQ-OTmMDjN4eVWWBY9snUgPknAtohug_CRvPcH7xk14qsJpByCxwvIzlwkoBmTdJ2PA_CZ3raEl7cUJPm9QvYbr8_W3uh10hbuJwrZnXZ2cBrNC0G8aM0nxxXQtPw0WdG6RxhBibHOTUx5GIEdn2P4HyIymeNxEl5tMH9UUN_V6LmaVIOLt5VqsJ-NsJOKQUwp1IxtPPLbmxSNbaG0lsvDNqinHR4dcGym01pXz5qib-Towvfwx9TcAD8F2upytEWK005WGNmKTqVrdEHFNWFxVZ3hpk2X555TCMIHivzLi13pZaWjdSULK1ClSOtDoRAKLhQTNToHjzfmR6fhqMtb3vDdKVrC-lFK8Wgxq7qFzBUYSyUEF2GxCGTl6oz7xBNZBksO9CUVqDRHBvi_7Ifgn3xdE5e1wKGG3fjRcnpBF1Lpqsi0NT3dMpLD7RQ1XtW2n5Uh2lGf0WQeQjOb9-FhN0OeJiiETNz7UEK6U5KnULPjMvNPJHOewU0iGHT1qMl4MS_4nDRFbqhJNaCm9ZTO8k3GE-9pVG9x4NOmUguRHYaeCG5OYf2GfiKqAmTM2b_g233Zk91BwOD_wKbmu1r-vqzU-jIJ9zhcGhWCJmOdEo2uWRyXhQVrglJre69o3n_qi-P5zuprqkEBsODKcDhgYykZuXzp_RYLEGKTyda6JBVvlHyzXHhSqSWPQfpP1Ik1zKkD_oJgcZvbrA7omPKDttBDE_ys-X3GCD0igBKd3JXUjpHAo-kyQOG7xdJ6LpVf-EzIkwEGIrRGY4YYSniviw3uQgDJ4qCcYUiqHUI64OtDgUHjC7iLWtWcyqWMn_VM_xYS8UB81FtFrHVxuQH-sQIyscL_dqyEgy_yHN5RItU_Pvegp0uI_uA_zbae6_jBkpWY16ALmu_Wnres1HVcREaffmHqFQgPq4_C3tcHN9n9xGmWVv19qxW9BfB3d4iqgWSY-2I2PSi-ypuOWsuq-bMxd7vqEZ_CwMsv6f89dhQEq839MXSwuW9al3YNP_4HaUXsVKtUoCXSZaN_LbfNUoRxgtR2Sqlp1IlEeSb6zMW7glScp6Wy0un74BY3oUL-MydpgI5uP1E5QC983r3PZrZC0B1gqD7_z6WJ_gp8F1wVe9UgGQ9ChQ-bwK4v5Ref9TVBCihlOUaHH9eUJjC7h8N7VMJUOZ3OS4UqL19K1SkmWekyAO1HltCTNJpA1vyqITPKBBGPPTQ3OwSCdnE7TLaptnusj36lb2Jls2uEeajnPCwaX7ROW7LGe5SMZjByQrVMnJCZtIIe4NAOACy2JL2Ux36mPHa32oJErFMkPfHGGVeivFhzs_9kBejYSZRAkAgFm-uzNktEad56b2JqQCufh9D0zvLusV_IhVQsCrrUqTsbSQzFy7X2YEulEVgMQ0YkYrazTviZfOBweCl1t-hlBX44jABUHYjmA6I3IcdAy6zUMvelDV814Wx4cBzpd6thr0Y1iHYuXtNq-kVCCQl9xsrUon-QT3eoIl2YdS-5GWgFnCzPJ0i687uft_OmO3lqRcTlnw2g_3MEvq1G5liObliDOEqWfHeDTabC5kXfTaQNws2UWajEFNh34I_3k-MsMGgT6sWL4VAV4oOKwNeMndxNCUnw6uo1iIpuOsutJm-p9hyB1VcijE9EVhi6YRMNcBqszI94l7X88_shZkm_Mm-G1USuDX3S-1hrsWn5a_uUiZg2r0vxWkVY--sAtrVGXl5pvx_vGhqE9j8PiE84KZthm5AKEKtkEygNLnPN2pWkzJi8BWFuC1cMeimQA3djleuw6uirMrMAjq9XT2k7VdqEFMxWD_Y8sQkJkXRuGgIS0i-IEfEsJopunZDryqoOO06omSkbOFLbtksyectks5qHXRgMmxy7HIxWn80I-QKQ6mAKOq9o7GETV30GXcB5-89Utj7k1ojih9e45TVplkeHmOW1y4H7_fbi_hWbc3IGDAdEh3VFPHzwNilEX1VHSIZV8Ff0MsOk34TFq8zyvDxFwOBC5jbwhmlR3WxuIF5FgHGpr4xvBH0MZRQdOoMe7JIWZSpSX2ylbYsoDQZvN562y61gEhzaXYq77vESxN3qtinsK-tJeEYYGuslnwif5JEbo4BFImk1CTf3nFB0KOYttqj1ILOIbiuKKhTxK8b9RIIv44VaGJwjEO9eMj4tH9Uyke41bNkwl4kle6tt8BwfwsNfX3INzaiH2TP7Hxkwpn6awmAOvqpYXqswuMOHUXTyMaa9ZUdxxyijw753upUlvNj4-89P_za6Kq67inN7hrgqn92g5DDfWTy5ZBW2Fa4BbqRpgZUCxsGa0lk-YZqGrejt21qKAg8EWQDDmCjCO87HAmSNp1xDqkdA7JfezWpVGGNAJ-bMqeKURXhjrvpy5jomdWP-a6jmkbTpJSJJ0ViD4fd49WXAh8mDTm9BPOXk2EAVHkdvw5Mp6KIxL5GL5SD0l0PTqsgU4iETD5WDuNTCsjZgWT0fh9RD-aBObP_LL9h9O4dfuxFhI--LklasfpZj4wWfeIMYao62GgJmpZ-8A9d8se6tLv2MgPOg_CFWtHX02PtLlpjbLefiyQLAsOAkaJDKHWetdkrrQY6h7vnqL_Ru1XctbQPesgqYBYDgDYXRwtvB-TOP8bs4Rx_6WJFnhihXVSDffl59OmrLNnSRQs_Xm5uTFflY7hK0a3gaJe8fmhAMX9P2GgiovdRf3LNfVAWPjTN0kv13A6sbVu7zDp8XQCh66p0zKTfrsPnuoTXO9QPJOsCGEV0LXnkcq-mTLe1mdE7gGyqSgqK01X8P_ayxU9plGY0G1YC2IjBXzx47mPM66lqpE0xISMHFUAGSgrjUBW_E14fwWv3LBX9Snr27uNjHNJi1fiKAa6RnnB1oiWEttsatmwSgMOVuhBef8lU_dd4HA_e3V7EnMUlREzYc97lvDhmczl9-OV_N9iE7rc_9edkzNoF4fDgbb5LhWQdlxRxEY4wUO1STN5M3MDjTJes8snzBgfNy7K9ymtqjJo8Ev100gEpzllmfaHnrYkbdQ8U26nbl1eiuUVspdT5INkkqeiCI_kkz4xrgVjXLqhCndZI9VsZazt5Y-dM7KnTovAxU4bn3eaekP96Km0p6_3uqUMPK78shkLqmAJqpKP9LMnA6qCu8pY6QAy53m6kqnM5TYOw4G6TCHdGLZgaUk7gpQIJiINcEdy0QvFylppBem_UTgHx4noUTtxNbJ6NsT3u3AJni_7MkZqxPa2oJopStQvy_Z2axKwGS8-LObmG1_2OimzBiV93iJo--os4tvi-m8WiRF3LFFj4kNyJulSvXQwJpMDfGlXJIsuWiQfaSVp706fL1kLQAwj0UkqonZLerpfGx9F2rmaLZdfS_BJwvTXrDSczzfo1KFpVrx0dE1s5ZTkfrL7ztbjmHRLFG4n7SmBAEHVltLirsqJTh8aTygt9EM1ayqpLKmRIn95yJgN-301gXKs1AEQJhU0aIkCzsK2HXFETnDHlU_4ywICZEawGfJpNie_I_5RdPqOisYbtJQDvJpG91s1WBpm9VSnhhsSNZQeP2dOSxj2W1t3Bk3cXFM_gHCDQcQityP-4RT1L57B-x_c9LhDDshI3IPmXq761kDg-5uUnVAwYJK_4IozyUF26PJhjGgc_RRfm6fhi3CVsqlV6RxefttfUbq7IaEHrgVyOgOOESfc5ITGLDDtjzQTKQXT9H-mwISoSRxoGOMOeWC_g0h6lT-PBqKtvm4BHTHs59CwLAUSKLomPrAPZrdLirxOjjFZkBUqu02pVIT_alnrQxKPMyF5PqafZgylKz3yi2mYVY_a55GdOwp6nckllmStXgnlFUkvRrrKPRxzU5Egkl4fFhIP2IO1qn_tmNiJuwFmv-4peNxW0JXFiWCyTygZtQ18v5NYZP9R8Ng7Ysh2zDLAiGFaF9KuwM8ygsuUquQ-VBSDl-Vc8PTs9a_GDnbakTXk_dQfzbDVjiKvXctF0HvBasJEhGoOYOmyga_MzT6ZsLClDOWy-9beNejLibVetcMaD98NZkfnCxlOpekPEx5a99SpLOjTPm3tJx1ipO4p9kiNsMXGTcWrVoVgkWgZdx7DNpACsQA8_vgXYNyOU1hR5F5aQGyDLNSwvIiI-FAESRKxY9lR2H4h9oud1V6iOtuT5QySYtn73vjLZis4hh1QigO7BwAxyB_F94_EXpZui4luCQUSzSsmAU_rADczeqJJpEmAWj_zPVjO5qqK7JCSwg8y3LcC081yL6l5sZWWuNY3PbIpXF9KriivoHHDAzh_VNnhEmBtVUQrUvYFzXj0ld2uz2a50wrUpometbqA96QYBwjtLtALzjXdxAm6eyum-sj_0I0fHggNpeV3BOZZhlSHg84meTK8mKZ25WchGUZBYbDsh4oMpkIva6UgO8Cej0qm2qaZilrVDnyjsMsWMVgDgOu2U6HhJYknpqzzjwEWZBcaBALBdx6FWPbOu2fl12iaRZWFHMrOiDqOZ8kla-q6cYYld876S-_987sPwPErSz3S09e3AOxWdaAMqX5WsfhPoTRWR1TvSDZuPQwAViLJXylR_wtauH8EdyNB2c6ZARKSt68NTrDrnbhE9nGfdj4i29YP0T1S7G7Cb4TDg6IebQVX3_MFH95bmyhfRm8oGjf48yl_rxf9-vhz5RkBljR2E4SkPanD1NWjbu5XPWLKujGNVUqhAR3xsGoJJrsx4BSWUYnTCdQ0_ldHg6xmLixG_CfVE7py8VtI0YyFe7Kls46swZtLBbvGJyFPLCHFCv69GKEURDc0g5kka19QhP9sBszSSxXtgmRI30a6joNu6ORjqn8mufqIdsYI_CGsGTT3LjLr5a-1j4xO4UKfKq5134B-Fv0xAla3htSsyqS8BOiRjxz7vcri-_zNIKN8WF5A-C8FfEIWkzmjHLNzTon8hivTtU5FOQAtocmVb4R30J0jIFmEAUgLw8LZZfKM8GCUDdP3_fJNeFVUawvCTgON-Sz7jNz3TqBFcQyv4FMWQRVinPiy3eCMqm37nItxWOS63knaWKQrKZ80oJh-_gTQ4t_9lKGYEb0hdXSEN8VYSzJ5_yO02axlYxp6iVr1Jpms5SyEx2KiahQXaeBozZruUpcMd7MfU4awUjzD-jGVowW9dH313Nmu03LImPFc_QBaKhfsyT7Ariyn40GOzfGYO0IKBXbcT4JfyFJrgdyP9AuLon8wlJRkK0OnRTkMwuSryfdZBKTxL6FXy7uUohaex7SKJ1mZFKs0ntH_YZFwrewvFfWFlCoeshI88tfHMQC-mM58Oyw5z02eLHwgtwbxE1mkfFduExnWUkiIy4dU7tEp-aC7L6UDVz1X4VcD97-eW_aAiXE1eM0ieqDiheUx93vyfb5MaY_oMNomtxGn5G099Bklsa4e3mdAHeqq5JZSB_8yxfrqB2DO5xFuj0R-fgdi41A8d1XHwtuGkdQ8TQFNGcQdEbl2zEfKzyI4cq2SinqfsVgA-29e65E0CjDPv-SuhPJkMQPoQU_1wtnDriIQGhs7dw2IWJ13crkxr9tWZZ2SgSgLKuh6p-1VPghnAi3JxezFzsXPPN0kGZ9rBWMsUvUA4Y4jB4qTuM2isa812x7qhFaza8dFhOj-WBdRoRB1AaIUWHzo96rqBHo-SCJxrOmaX3DVyEgi9ZFNS4ienko2-sO5HtUjFXD6DDHTJgXEg01UU6NYMdZrwsHAUzU9s1HsFjht1xlEPcon1H8qFzKnB6dpkgSsvhgpSQ8SqNGPvyR7hyaGu70qG_pw4KP6_kYYY4HzJssDbvqVaS5UDMnlqYzGSeyor-1dzqAbs11A_Q5X-PpvO7Ey8IrTUhsHwgH_W5BfjVd9rP41CvucMeNTgqLnX8krr3-AY-6dAdgJ8itf84JsDdE095b5TpKhWoQmHfjj9puTQrv7cqEUTQE7cuQs2cOS9qpsF_1-YsgH7UNrvGMCvs5it8nfMmI5O9j0_nLpeW-zqf4ZE5568Ldeu8XJLP5rmWTylE_132NVbLo9aCG5eWmNl6iyU4R4Zeez06nhUCoK5DuNbcKd21Ib0W-fP0CbqOwWqGRYCGUftaEAImfk7jyFnD-tnHyYyUTA0jlqD3uxoY8KCmJcRlBn35CrhjC83BQXYps2y6HXexQHQURq8CsQZq83JUGggo4rWgAT1rY7sbDwZTTjO4yVyW5P-AKLT1Jx8q1CefMTXnxzeU-nQs8Wvn6WtK8b4hGaYrenNUnCnpbeWav_cZvEprDch9OuA0xmKcXB8P6164FYtOwihNGu-M94cPpcSnjzida4d7L3eh9hBEnMahOfT-WXbwwtAHP8Atj5rttKFimLG-bDU1L8OQvWlObvanAj6zmga0szuj_THVQpGraxARrVe5t7ZBFPnOULZQzUwzD_hQx5ITkR5gfDrMxpPm9dgrH2rwhupXUm_RNUKiiEnVY57s0XT9kwh5EtoubQqU066TNEoKfLuTmblIYmnkDehAnL00ki6BYmGNWm09SP-ichGSz7Mm07DN2tJkQodODMcbcopRMqsKV9IAqK5WSpGvqoHzWMR81f-czeFcfTXnevY_GsKKW2Auk89aOTF0Vu1jGuo_mMPTs3Nmto6ZlbOvvSttbHDRRHgrCFzONoT_NUvPIjRcYFPByDKJCdxHBSjtoNLhb3YJi_RXGxf_14ib5lcxkJTV5gEGXG2KO4Fz0Gz_jSziM_7e7ZYH4kwrVuLgCSDzHHlv0DtqkaazHoER-O4qbbwVOaHsX1F3ElpSMlNodH3YmEzN4wq-m4SFvcTRgS0ixL2iBLFBsyZHCDp-ddzJvFPUp3qWzLgZM82Vz-FUkHetgMspbzs44jaGkR1g8TFyeny-L6dEFFyVV5SnqiANEm3xd3ouHKhoj-4ZCFky_i2F7bAVzkvfJsv1DWQVbsHb_7Ar3IMCI1fbOUvPDVKtDgwkDNmKVAh6e2PlqXkua5Zyw9eM86UjcyXHwfm5fe_uFaqC1UuuyYm1vcQXTxL3PVGJaUbKrtv3nvhrEKLUK3k3shHsYavWcUYf5YaHrdPJlX-nZprADltSC2FOtBipB93YRK7EsxT_8cxxhBUOW8O8JXoXISMvHfQ2-J00pNWVc0P6BuNDP39x1HSQIE6NLqQsQD0wNj8bskcdvksFdMlxG8yLJQIL_CFWmJxOS-6blAIofN13L-WMEH9OsysGMsO2u8jNAbgOF2FpTv_ecDemM3Mv1EL_EUn64gn-3YX9gl8XGjreweVBhMrzLKzqagfTzGZFaxfte35iYiHXTM4FoehpId7osWDGCmvVqcW5yE47-owJ3iURrE4a-h3SEfu0SklCkajrzkzKySL-fnqHjosQYJMbudwaXl6WO51r2u8pr-s9VdE_1kz2H-NzkZGSiQXjt-Amdnj7iY2eXDfiAw0bfvLc1WzD1tqYVOfCzIxvHPCo0OXoBYTVExz5IFisUoSNVe_qFFppn6GHeR-mJMRIO1c5gBGXaGMs754XZ5Rj9G6FMMVl2Qze43dpW9l4iPjWkrXGrBZ4FX5ZiBosZWSri0s6zLYDmkLTE4gqHk3iSzqlRHW8a1JWYuRB7or2H3Nfi_EElmTGqP3WPzNaC8KZLn42wcDEA0vfhwwr8aJ6n4nOtFP6lQrSglhn8YR_o5FeS5orRtQdETsymZIcRkoQNjRDwUVk6Iw_3miHRcLKtz5ojI5aeMSyW_MyZnEAzYLTByeYbiLSsQCfIEnnqM0MucnSErnCYQ_--Yt9Phzrgh4u_TbYJ1AgRULzSAdwvBgG_69jP5qyj7gnIYx43mMbry5AqrOlp1khOFFmRWHtyf4c16KLtu5q5BHtT5bNQG53Zgh6o7VMJO7YFEHCwzoJbgxk0bWSXcwiJWQeHvHkjqzelcDkClGMYhY6RhhFO4xMqcqz5Xs17npcUKIP0DIOk5BnyQgK6jZXnzAC80GSPxP-38N_zfenOHiQpSdDE2VqM1KFVcq4mNrx6wsatM6dzzhv1MOWlCADAnK6aetPfCMnf4n0yqQ3NMn7u0aU0VzX_OxA9oEpAHr8JZ8KwSXoXcJvbnmPfZMkXX7_qkMpCsTA6tpmXb65c_CbxHQmAxi4oKRyPMg41LcmoHgeNtOAO6GYO34_FV-GurGmtNPkN6yrknKLq3Va4DuVBs9id24wkkdqYzklZAknOnUAhccTmhWKpFE37Rr04BaPj9M6c9fUASczHTxqD-wqGpW0TVdMl5YDUUa2f3aQXVCiLZ9ajxlTDsmFNdaFECegBJEYB1YizHBpugCSVSh5gHYFvhZK03xGIdBlChSaP_nLDGVpT2QrR73avZ3dyOVE3FM51lEH7T7I6TYdI4Br9rSECuOwFhub1ahtqjvXG6-hrWr43VOJ5Ff72OxQEMUt7WacWrQbMyYLeINxAzJnV8K-v25erb6bl3Qp5gWhtjbyX6aDMlhRHNMbsOqVkrSAdoublwFemLjlK_tvxxY5pAfIVu99emRynzmd-_FLwKEClxRJRa0PLCVOqew953dC2EP6SE3rkBDbvOa4QsGOev20EE6TivfzTsrb_cfKpX_VxqPaPP_Fuz-C6E7OnIFrnHeq5CxLUOQ6WByQao9bGiEM5EFtQ8P6klFLxLjSDTW-vEosMmGDDry49aaFYSruO7q1pX2EJR7dw2UqYADetKa0jGuBQBdPRnsmw_Tiah15eFlh5omlmiZ6U6vr0LQZ-KBxujIJwJq9Pu5boeF9P4flgA7Rij2uFK6M1M92hZyrSgKsLabD8PvUHE43BfwYX5HeoRIDKLw1lwMoqTFN618cCiGHn7NfCtDVSlxcw3mF-fxCuXu8ibNuJzCrd9zyAAAzRHLGOPPgFk1cXVFf62cwdmZcOpncjzj1KK-Kj2D0untpp6jbVMKmJx-ByQEyPfzHCEOTtNwaemwNAsqpQJ-Db0uPQAVn5VPjCY9PilrUP9Br428v9IHfyy25jlsfGzCAQqBeTf0rVmC9dZtU3HQxyYsMpbaC0dfzfwRhEp6eq8M4JNqmm2jsd8ewmrMvbN5c3U3cIIBEFY9ArlGhzwQIKTS-S_7MHsUiq9s7Jk7CyXfMExwOE8nsmgmR3jDqkq2CZJCR7eUamGuk9Xka8LFdaLbHJibMbu-p61YNYny3CTu8cbJPaygQe8gplyOxnBmjopc3HWYaWC84Gj1StnRK-qw-lHM3XCxTFUANz1BCYL9SIJ2NShCMqc2ZXg8XLuibZwxrxnJBEpzy5y3fitFKlNoDDMVwYiSJnVd9BOlq5nYSDsspQpYUCabLZeTvHdDR9CbMuMmijkxeDzg1M8fgGiN3b4IcqzS6kvYQwRzFvrTr8cHPiSEwbDmANo02XE81hAXPKn-gJUh0vlKL9nMHK-j0erYcZAn1OwDCbbmZSFTztp7nXa472bDwEN9uo0IPZ7DC8Tq_KCk6rjO28Itgrt0wN9KuvJl_q-SuwXt1cWeuzXMT-Wc0K5rHZx8-FYe4jeAMJAQKrfLf1zeivyijr8fvuAdYU229r-MF0FfIDS4gEX3hq4uyaRUpZaN9TbLv9hUqnKsxRDKhqHfVRhqbf5EbNLgamTmyO-tdQCjn8QGeuOfDQZMGixv-tdKJKJ6eascGie1EYsrzXDb1guttpNmJvja-nvhsA0645Mjxz86D442-nDg73FHM6QRVCEXJOU2ZY4pb1YrphW7cMC8mWDwmxTB4m1OrjufY33JRXptEm6VciUP0U2y454w2r3UjACSmzfoXueEK8dLH2CuXBx_geaV27BzHyrIWliZ_jfK2DWHz3mz-GZSU5Zz3eRrrtN-o4g1flewJSkLuirzSuUNf18cqoKMcWl2RivDOLNMdU66gTaebjexe4gkUGQjFfCrp8wAyV4szdVQYS1h3X5FrZ7BjGSNEc4Y4W6VhH5E0HUDo0tvg-BI-SooMtWo65jqeU_bW_J8_aT2IxJ3AjP8HYKyNq4W0ohuMMMk4L0cJuES1EubqEsibyJ86qj2Wks2qEQ7WLQPM4tZYzUJ0EijeyqNMxd-n3GhJOrg0XIqe0kBhxa8vZee_UFjTUG8pZ7Ay6lL-atE8dylyEMBI-zbh5cEHPDgjq7iZ2mizbFocdXpqwce0C9y1pJQ56Iz1VomKKYKjWrpXMlock0ANQCdQdexAh_lctxH05lYvmj2z8XUsZneA2KtsEjFdEN04FrYta85LU7httrV2SMDlrKZ69-aBbKDxYkaobbn-mzSPTAxs5KZxz_Yg9MzOk6zZImeIyQaRoen0JwLy8i_b6HNHSqSXtYtgXyxaTh3Ayl3wow6_Az0BZCIZGZ9r9cX8tVY1bgkjht1a3obdW1dehhBIbFKpuvyvqdH020R0tGzDzX3g6Ck1Nv_e65_LIjtXCEhE-45vFf8l6eL3KDFJ_-uARf1dbpghpD7opBfticYaa6FXY3h8-c_G6PlPVyZX61juNVXpnBdNIIWX1BHnhYD6J94RddXPc6cHe-25-r4VaoFqDw158KZVqJzamK46PkgfzSfmqDV8tlTAr8ogfBRPTgdMaiDkDeF9zsFd_aY9pDMpW6m4P79l3T6G6DoEdVph3kee47Ubk5ynHozsCjytkTtc_sGirqLn1wowTD45IGz0d5xEO6NeBDkAYOvaWrYpCGrJENn9kVOC9bSwNEQ3z3q_AB85gJyavsPE4QgYA0nQoEKC5kdAzrw7uuojZAsSyEPMcHq60DLRKHpgSIrPsm-kX-PiVHew3Dls8Zdc-t-Fk4i8D5BAb3HE-emo59ruLPV5G4OTEGvbm_sDiJja6HmJ8uZrsvg8XypSjnlNP0m286i8pXMjO7fxa8Pbe4uSXe47Pf16lxyN1bU5SLpN821FQkUxoXCWWoFlTLTIBvuNNWZLkeHOGM591JjtgdJjrskUMENY4Ev5czb5OC371CzPeEQCLMDV1oyQNhApVN8QqhmvJgZb2LCmO4EVK2Rc_O6PBKEp4YdSiYZize9M95QDKiPNcmz53e8T9bZDV0MjsaAqSmBfYVbSevuv1PnCDJPVYbc7qPzrKR41mbxBeTXBLYHT73TI9zdx8V6_GL4xf-bVVbbF3KxF7SIE42yjfVPyevBuN1GF-ahloXqTn4NHvRjUpQiTyBtuks6MUdtvZJTZJgYh_8D_3SWFuCXUcTArnaDsuXL8Zb5TSSbJOCDW4kNGHkqHXVLifzaYyCmXAOKF_gi3V1oNrqhwocfpppiH4dcax0i3Tw_mOet49PthW7149dhCg4X5iH3jB8ojiuGkNqtQZt4kqp2fq5qnQW-7cIAIGnvf7G5hlfCIHzww_Awv2mEiyzbrUU1Mz51WI2OL3YWKQOa7DCM6ETMCvpJ8nOzINRO5Gh72E8DSDYJ56orb0--F1vDL8k__FlFNA3y3cPNcgNE9RJrFNM4cGGXCWXqfkJeC9UWhDwqoCdTtEC_iGMfojLNc5BbtKaROyy3MtaPOh6HTXb9pMAVCkUkPbRhS6silAt9hGbCLzPgwo8PhN3lb2754hve-48VICmZrQpRDY94ELILP2m_obvEoC8sMQGl-EJOtj2LNXj20q7uDfLZAoGvgMCxbJUjgrCgisnTEQt585I0NECnff1c6MTVab2zYiKMxbe4xo7IjelZv0oZbgB1EAntfyrCeETwrGy_rgflgxJ7tAIqN0eLktt2nW4u4Avqdcpae1mLP0-jsejtI71OtUL7AdQZvpG8IntZ73ol6HWWkixOMEAGzmgpxAiTDz6CyKnDenKhlWRaHn2_Yp8x0Cmk4KLciBJXZ65VOvMP5jHaAZhkYmA26YGGBiwBnZ7GyD9DOdAoFURKlkxbVKXp9iQiAMFy-4mynI-8coZcYZqNtHoRKYTxmPycdlbvJJG-z7v2_HMYABdaUYk8M3YFHGUcezgvU_fVnkMeexvz5-z18zAXHZDF2eCd4WqvX-wU9z9FkYAYzXEcMb6ViPSbwvqDjSRoxw4uqDwExlW3lxYqjX7b34NEiJ5A0DjYcQZBXS6xntT9W78GEBxOv9RkFeoaIr9UBAacXqBO2Pdt3lK7L0TxDWG-da5yxUNO5coonymjC-h6xtwyxFVYCUnY0_NCP6Xzb9Er9E_J1IQrCJPIsRWfV3-6WuswPSRIsn-mUE_2Y8mdiAPDJW4LeJnRiTnFzzJpNp-AkKzIGcptcSF9A7zPskzTUWa5Owiy62vV5nSa5K-ExCOxH_4HAMLIFVNfVXdnQ0rne4St5NiTgdrn0V53vufic59U7rArGB6nEMEGHdw3HTRBRuh72o-MUTzTFrU03-yjws_JitCd4YSl-bH2iVbyS1H4cTW5YN3GOOrrSd3s5367ICzF0hNGbip3GM-nTqqiYPdFO_IqfTAwaJM3WpfjcNqsubr_X3ukz-W-jLwefgfGE9Aibwqo4wufLRG3a-H4NeArE78GmV9bsTBWq2xZJ6yvREH7MHq6DQaiM9ivfu2-zvHdO6r8D5farDUsqg5r1HlrlkErLr6iKxQ03v1qn356-Z6yVguoEF7u3DLcyPC9Ogsb2irc8bDcX1I45Lp0cUmmlEsd_vaacIox_ZX3p0TQb7LBcRSxw_jCy4XiX-NWKAvhbvxSsKHTSsBw54ZpBbxxWubiOV2KVlg_CdqeWpc8vCzkbBntVxTCb0j56m8l8DFgqE0CPahBeI2DZBkWXZ0i8IrcLSGOrlnnZIDXIuQzpaKZnMt2WEwpWFJBadTnG7pfioFnbpWfu_lsvLAxiSsmf3dPWcJ1dBSYsq5-LngginO2ybczGK679Q8EYFxQkR6l6tixZIin9uw_1NpM2YoEz2l2Sce9LOeyBP0ODSvnkcL1WDw-SDfV1LQNoOsp_r7vRk4OsgcpidtSgM98Yjkm5yDU8xHWpfJ1xKn7KewFX2xq6pvv69YsG2WS1E6A-ob1z8AGy3yArvZxrbYuWq35bdOGe0wNWm5AAzCwV_skfruJ1dZdeLQlBoyfMHcx9ZmSd4nYpo-AAwsN0AsPm2otEgOwAXt5VeyPHrehgKcsCaD0eR7vuDsICNvR7rTC3CvGZTqQw5x9mNxMQMT-qjcB-ZqE_rCCXKAtq4V6wj-DFXO9fz-jVQb6k6OO2RQ-SbXDuUGtGGMmm2KeSHz4JmHyIRSVd3dwDZk0pkISnsIwzVOXeT33L7AItyf_LHMavxLgDGgFY99Jt-c23RzFNR9xyBn0nrMIiul4HH6SG9cffpi3-rCYI3Hocv1AjRlyIu7pQiuZhaar23kdcRrFxb_D4gtuBScbnMfTxeXPKGrmxXCHsT9V-zwQ0QsOzUsByFO548yqHRwqrAggDf8C6WxuhbVQl2NbqRepy37PRhQHbFX4jJCPTD9W71TqyVInv2pgIcyYyLNq9FpvKMKVHx4_jWzmVWZLIstrb39W2uNroBSE7CTTx9gAIeFDRzjRCLVe2JPjuYmJK4B4ImT-CMhexaTCu9-JWdj7KjSHMTOr71ksEU6Zwcbx2XcONd1hXdfWR88AQ0JxQWtrgRAuBgZ5dbr_XKxQ18DUedQvcvC-g74rwWp8wy_UvwmyqAEpk5o1j4mxKEaZm3A2Hddh89KdOB7svLRU93iFna1YYyG8tyVpYAAhC8dSFDJLIsCWM1BP3QfQn640u__XsLo2sg30WqkB01tXEFJrU7FVZtgbzaymJ11FU3y1g-Sp_W53AqnwljJ4wBnsjdpGDTJEko4KRzx2cpg8zJ3o0e_N-pgjqnDHlu1zHDCw8q4YixItbyiCHNd1Z8AQcUmAGDJnAeN64YdO6cQ-a9lmHz6ufM5pitJZbf2dTMloRmlf4Say7aSdjcppMipwjZKRLgf2XJBdIrPJ9a2LH-Md9pTtfJ62f1pd0N4n5O9StcfYBFWwWz1ZwXqfLBuXBh7PWT0SU8YDF89z4GrfSOqwvwVZE2eKWhGm7oM-S48XJT1myL1t2QlCplLS2qUv8CqxNy2lrAOpYoXrVTyFjumrX5fgQEFgTjTDW9Run_8P3B-7CrJTyW8-wYLIK5oTyT8SEq_PD3F5cdhqPBNCC-j_eBC-K-6wpIAX-6PaJzUVTbsvY27JaE-FjpTopzGjNf0rBqQ97pxMWGjytgxDNDvorqgMXkL75thgfBdH_3Pa5sl1kfshvMg6xWLkGJXEA1G57vqpBhQuK33ytrZgofZg892JMEf4XhL2LefAIHV66IFYo7kaKjVhpLDo6Z2BXXTNmTofIE0-bu-UFtc9LMbnqhI04wiZ68FDLFRiZL4XMLerDkyuyKpJ8080vbd4b-2SuywPbFIYA94J1I5v8LEo9ZhAp8oFTYfsLJ5PkbJu_R_Oi7JY0ey3SxgdPzh2kRidZfm6-Ri4va5R-Hei6ibcAgjp6KDOaSkvRZVeukV12YrwqWfrMHZ5ho_JN4rPhgpThPu-KdwiG_ED9fFYgMnnmgG0vQhgd2LtZWMw4_r2Yj3RcaknWVrP5hBk7Mt1y-Sjd3CRh84rRqNGXzSolTR4ELQUbD-RlCzOH0MVGJriLP58JrAob-cr1jZaS55eJdydEOuh76Ybz8Bb4tYF8UC60pehnmx_3j1--eI8ikT63K4kkrvlOPQbCE7zs4Yb5n_XMO4nXDtepFgkJx3kKoFmICQK9qsXkr5uqqFhBkz7WgCaZEMd6DVg2JUM4ffdUKDrYUf9VMklHQe2uo5ponxORdUiQj3dhDHxNXsZTBCK1DuKotND35GUAnWxwsYzvXDhaDyeS71998gqXgs_GEXUUDJdRuoJRAE_AF-S9pL-fheIhVRA_GcWYT2JcfF5UiUQrm4bPt1515eah5iKPADfQCsxGhzDXvQqGbnce_IPFse7200W7pqBMuhi7pXhIn96w30qCX43tNQT_gkCmqViBTLIm1D_dlN11X6k_alrrOEd1ex6--lvUwqKPjJGWE5qjFtSQbWfMoYUkIUlc_CUGAeLuXCZeT7q5T26jGZlVMv7vm3l9xeRvCHgRM7KikyIvW8SyJnrzw48rlJT0kFuPG_jiIE-j6MAcfRrqAaOq83shc49U57RVWvm96ipkXapjbsaBbEJMv-mgz1iMC50qIX_Pkkt1MnMJemvc942BzuyCyhtkntRyFBdzY8t-p7NqXFlpXtwRv0a8QAhlEG-HFIB7Mb4z5q3h7X4Iw6bym_GLwj12-7JQaMYmjZvX2iyooQmvZyToZ_e1FSldgTBA89AnoWQlhS73f7MJY78yvcKf0OULLI1EAXsW2aO_UJ9I6uTGbbAdRaPqlz3SP3bu-lrVLGVNQQkBKv1lUNcTey6NcrB958oGfNGUv6-WEBz3yXIcEksYVtiJcjZzJ7VCLZjxtaVJrZvYWOdH4TP_hhxo4GkzHXoQpuEog2Jp6PhYdzjS1F-9t5gJSVacN6ugxAjE4Vx4U28YEbjevXUZ844ca--D2NZMRCknvX70j05PyMDMH-zBWSOycxDGIUo-CLE4gyKF4sSr-wdd1Ly18FMMB9ekkLDGAy8kP6fFzLcUQ3ySMXTr1Mj5zFZLGW5rrTfavBbU05xKtoiKMHE0JFiiul2-ZEdn2BN0k2c2ScuBu3ohrVIMGV8Kwj3iKCPpTONas4ASnLCk2Eafp-ic7PgA6dYZ3uDShPZYnl441QkP-LVVeOdJklQpWgSsmcGEf-4XneUkmirRjuBP_6-skzO4r9pzrmIvJHw9UU_Q05w8ZxSoUovnMlY5yNTMZHMKFrtaHWn4U3J4PCwGXhU179O_hzTVRmf9C6Sg9VVCOPbYrN081kR4aHfEJxtYtdO5EB1FJ8qVihpjU73ypzdzFVokF3zDt2uFIx9DVDhMX3GCw1oVLDXPHW3pCqb7WEqVL9WseM0wdMqXNEgZuRgvlctkQ47W1vQWg6rC0pDGWgfz7AGvK5X6NJQ0O3YkfgzUACLnRR-zEzgDXNmgwHrP1Dht9Xd089ogn07rFvRSQMaTnJf5SOP2rJoQDuFqnhen0-wqRrYjQhJD8t9cMdPaZo6thFI9-0OvMSPCf74ffQaQM9NCAHghgPajBkqWM5T-SLDLNGXrizIxjl8Z5P-wiaYtRPAoKfOkwDlozHkGuQI_tkf1fU_tFbAzTLm-uGYr8GuZ9UP8TT8EOivqwpFs8-e3fkM0wcT5lwtH7FNkoXZzq0oyRlRfCff8fNOyhOK7wwD8l_Og92LcpZF3DEY71jOcvTK5khDKe4dhgojOVE0e-mHeZ8ChWQsAoSx--6xmp7jeoUOoZlncD6-Mc28fKrokoB9zFrBNcQuan2Zaz-n1XnxT5BQLSFwvsdA0-YHAZ2onbUeSgbxMVYwanUnoJPHUtfeLdZHWanD9AX5O0qHtw5RTQUcUjZQAfXViT9xZIlPtuDgJHXtu1woWgx5KI2_SXhESETIXqn7fNghCtRwFft0bM-J-sHV_8Aolwl02qSiO-KWzm7usOGLYzf9Njk_tx00tAvEKS3oBEYabyPEYKGzflSSyYyjg0rZfxqGGKK_WNXTpNgb6kIWBE0AH_NeKdHMKeJVm7gl6mCw9wo6OAU5F0l9F5v2NV8p2BgMBo4iU8lhADky3I-F6TH0aC_BWtzEwVWtY9kbP4bPDyeiNyq3TE0CF9QxAUUd6ttcIzbNrCVsbvuqbElXCbBAyIlX_1M-eyoUsZXmwd3jZK4dSH1EgVw77Ejgl3nuV-9gUYEXeu3n7YOnqvJ6bgLNQO3iz8pvp1tX_IUWe4PeadcuiWqXvOCCMjd5lTO-N_u2iFO7TLyyd9Zr7cfnf23LL2pJKCTFF9Q2AVQ8QBdYgm7qsxahlSNhAIpkVPl5S3r0H2Ph1SCcesvtgeCb9Ap6xkDLPGWroabXUVvCepojDQQIuQTVodZKpRF683VzzAFSForCuoPoIuAJ67XRm0KGnn3wvQZFnn6ZTbdhAGHuEy32SmQ2WyFO6jE1MH_FSlpOi_iThTsZ9sfZRpqLhLtc2I45dGyPcmEoqAmjUKpOBnnYs2PkMrbboelKzbDBN6oeOyGKqJqzUniOO-9lMs7nVrdzrTduNtHU_L_9du3kzIan_t27ZmOtmC1p4wOyCRjWPI-hLDaqwavdTs0Eeopp31PEklTSvt42nTCm7wCYijPYhHkHgYB1qf0yld4c4hPlDfQQBMnmCyS6G0JDFqC9Bi-PDVP8MIeYs5BCUlxt8Lh-h0LIDZ2zMlhB7OLIg6urlLV6tKMft92PsJl-No5MmbMoSMF4QyPKN6f3G11BhOZ_IpGbGD7Z64bvkRjeuC9ZzPpAjO_vcMFvdLtT37f_qY5tUb5ty7zQs2KJsetcHjRF1-upEnEw38uenh-swFLzXBMGGkqc5btUAtccJC1zlZ3YepcB8YuI9jgKMfWUV9NZ0Z69Y2OXM4aM02A1HXjZdNuE79iO_685fyy5fl8YK9O5gBI8EE_R6HLMl2s4Hmy_s9J0NXnY4pjkfZIieNKJktLjI-VtKFmj8kQK5IlHJs9525jQziwVArVl2FrAdPl2CLNn065xo3lMRwxtG_F2dDyuZEypUp0tGzppXevQCWJfT7nF0KO4PFBDPCmeM8EDA9Ndo1fe94tgczBKvwQefmw9tn4kP3igFNHi85j-PH8k2GaeGH4_TmNWYHezrkx2dDHIFuhhQQUxEFpfqSHXLQfHqXUYTe1J9IQ8eJVxXxj9gVgG5xUvrDAjONdbAWxIlJSi5F4M2rKQFDTgN3nN9jy1n-uCcMW8bJpjAS8rAvs2k5lcLsvzcP1sWmIjNBI6mHgCxL71mBWNteVgUu7IFzV4qLGmZKKLzKuaE9_pI1qnNVxPU1ZgUUBLHlveff8rlHqCPwSYgNO-muxrrYIce5AQHS3VKh54kfzMp-uI6pSnUdCJ0Z_-WKvkX1l4EbmtBbgBcUVy4mQ_bXGk9gYRUldh5GN2LLx5kF4RtNsuUzIzHM3ITdD-n-axXQm7oUHZNfWmbo5WAyFsMJqaTgxGiYyfTbZIWYtrld204i4-znEoN2r_gBlpeew-30ASoqeCSjrjfnOTHJnHgPgTqbhcy1BTNbBkgkTjn95FUcbeoI7DbaHwUdovIoeCHS-3VA-krqXbWqJ1NUbAAortN4SqKfklzcTey334-to00ozHYhNSwfYm0soQ84wzHewIyV34eqkbkMKKVNCppacpTAVLqxpZP3RlIbXDvVcrn_c9xfbNL1AvNfqBQoBNlCLvTdU4HqAHyCsayu_FF84CknXs_j79RmCwX1df4lHJuqxRu_jbHeatI_PVtikR8fjjc_unRb-wfG9sYaeXeEo6MKU7-8iy5Up-w37h5P1lMo9cHTx1UoEuZZecjkgnrlFjt3b5QtVNOm8OO68Z8pNR2IPho0dpyU82IrmqPmGxnLBHWup3QUyoYml5iJj9upVysIDpYLLbF20rCxQA8UegC6rwzT-g4p2rZkwqR9teLwy9rbrduMlqK_27JPQmnc7XxqYXbLNNPJrBjOVZ--NXV3Dg5t6iQ8sJhYQoNkS4aEn-fVgEmLonDZx86BxcW1k7uWuJ7GFM90i7HQPJ8YiCD2IwxslC5lTV5rE70RtThqNYneG6ce4cZUm6NI7LqlhmSk70Iil0LVUuqEYn1LPGawCRBQcEGCM0NAjEefSHeY7lOGGpPY00ulDXmE_dCatqQQqe71FI2yMjg9eQbXahvWyGL9ZiW_AFrKkd7mn47TZ4WjK796R8ZAZgafyidULSVpzzI1SsaUB1GZFkpiXpW1eRdORoYjd26Uk_tavcJ673ehks_Mc4UrCsYMAvXjm001YWzWDpFJBwOwxm_JWvYglNrAgl_NTwXi3wV7Cu_w"};
-let PEOPLE={},ONCE=[],BIRTHDAYS=[],REPEATS=[],SETTINGS={};
-let DASHBOARD_ACCESS_KEY='';
-
-const fromBase64Url=value=>{
-  const normalized=value.replace(/-/g,'+').replace(/_/g,'/');
-  const padded=normalized+'='.repeat((4-normalized.length%4)%4);
-  const binary=atob(padded);
-  return Uint8Array.from(binary,ch=>ch.charCodeAt(0));
-};
-const normalizeAccessKey=value=>{
-  let candidate=(value||'').trim();
-  if(!candidate)return'';
-  try{if(/^https?:/i.test(candidate))candidate=new URL(candidate).hash}catch{}
-  candidate=candidate.replace(/^#/,'').replace(/^(?:key|k)=/i,'');
-  try{return decodeURIComponent(candidate)}catch{return candidate}
-};
-const accessKeyFromLocation=()=>normalizeAccessKey(location.hash);
-const showUnlockError=message=>{
-  const error=document.querySelector('#unlock-error');
-  if(error){error.textContent=message;error.hidden=!message}
-};
-const prepareUnlockForm=message=>{
-  const unlock=document.querySelector('#unlock');
-  if(unlock)unlock.hidden=false;
-  showUnlockError(message||'');
-  const form=document.querySelector('#unlock-form');
-  if(!form||form.dataset.ready)return;
-  form.dataset.ready='true';
-  form.addEventListener('submit',event=>{
-    event.preventDefault();
-    const input=document.querySelector('#access-key');
-    const candidate=normalizeAccessKey(input?.value||'');
-    if(!candidate){showUnlockError('Paste the private link or access key.');return}
-    location.hash='key='+candidate;
-    location.reload();
-  });
-};
-const preserveSecretLinks=()=>{
-  if(!DASHBOARD_ACCESS_KEY)return;
-  document.querySelectorAll('a[data-secure-link]').forEach(anchor=>{
-    const url=new URL(anchor.getAttribute('href'),location.href);
-    url.hash='key='+DASHBOARD_ACCESS_KEY;
-    anchor.href=url.href;
-  });
-};
-async function unlockCalendar(){
-  const candidate=accessKeyFromLocation();
-  if(!candidate){prepareUnlockForm('');return false}
-  try{
-    const rawKey=fromBase64Url(candidate);
-    if(rawKey.byteLength!==32)throw new Error('key length');
-    const cryptoKey=await crypto.subtle.importKey('raw',rawKey,{name:'AES-GCM'},false,['decrypt']);
-    const plaintext=await crypto.subtle.decrypt(
-      {name:'AES-GCM',iv:fromBase64Url(SECURE_PAYLOAD.iv)},
-      cryptoKey,
-      fromBase64Url(SECURE_PAYLOAD.ciphertext)
-    );
-    const data=JSON.parse(new TextDecoder().decode(plaintext));
-    PEOPLE=data.people;ONCE=data.once;BIRTHDAYS=data.birthdays;REPEATS=data.repeats;SETTINGS=data.settings;
-    DASHBOARD_ACCESS_KEY=candidate;
-    preserveSecretLinks();
-    return true;
-  }catch(error){
-    prepareUnlockForm('That private link or access key is not valid.');
-    return false;
+/* Plaintext family calendar. Canonical editable source; no password or encryption required. */
+let PEOPLE={
+  "penelope": {
+    "name": "Penelope",
+    "color": "#846BB8"
+  },
+  "timothy": {
+    "name": "Timothy",
+    "color": "#4F88BD"
+  },
+  "josie": {
+    "name": "Josie",
+    "color": "#F28C28"
+  },
+  "chad": {
+    "name": "Chad",
+    "color": "#4F9478"
+  },
+  "zanthia": {
+    "name": "Zanthia",
+    "color": "#B46A8A"
+  },
+  "parent": {
+    "name": "Parent",
+    "color": "#7C8794"
+  },
+  "family": {
+    "name": "Family",
+    "color": "#6786A8"
+  },
+  "alemannia": {
+    "name": "Alemannia",
+    "color": "#F4D03F"
   }
-}
-
-const pad=n=>String(n).padStart(2,'0'),iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),parse=s=>new Date(s+'T12:00:00'),monday=d=>{d=new Date(d);d.setHours(12,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d},mins=s=>{let[h,m]=s.split(':').map(Number);return h*60+m},dur=(a,b)=>{if(!a||!b)return'';let n=mins(b)-mins(a);return n>=60?Math.floor(n/60)+'h'+(n%60?' '+n%60+'m':''):n+'m'};
-function holidayFor(date){return (SETTINGS.holidays||{})[iso(date)]||''}
-function itemsFor(date){
-  const key=iso(date),items=ONCE.filter(item=>item.date===key).map(item=>({...item}));
-  for(const birthday of BIRTHDAYS)if(key.slice(5)===birthday.md)items.push({date:key,title:birthday.title,person:'family',birthday:true});
-  for(const repeat of REPEATS){
-    const {excludedDates=[],overrides={},...event}=repeat;
-    if(date.getDay()===repeat.weekday&&date>=parse(repeat.from)&&date<=parse(repeat.to)&&!excludedDates.includes(key))items.push({...event,...(overrides[key]||{}),date:key});
+};
+let ONCE=[
+  {
+    "date": "2026-09-05",
+    "title": "Quentin’s birthday party",
+    "person": "timothy",
+    "start": "12:00"
+  },
+  {
+    "date": "2026-09-08",
+    "title": "Ballet",
+    "person": "penelope",
+    "start": "15:45",
+    "end": "16:30",
+    "note": "Take ballet things to school · Change into ballet clothes at OGS"
+  },
+  {
+    "date": "2026-09-09",
+    "title": "Gogo leaves",
+    "person": "family",
+    "timeLabel": "Morning · Time TBC",
+    "responsible": "Chad",
+    "linkedTitle": "Gogo · Airport"
+  },
+  {
+    "date": "2026-09-12",
+    "title": "Alemannia vs Jahn Regensburg",
+    "person": "alemannia",
+    "start": "16:30"
+  },
+  {
+    "date": "2026-09-14",
+    "title": "Pick up Penelope for swimming",
+    "person": "chad",
+    "start": "15:00"
+  },
+  {
+    "date": "2026-09-14",
+    "title": "Arrive for swimming (15 minutes early)",
+    "person": "chad",
+    "start": "16:00",
+    "end": "16:15"
+  },
+  {
+    "date": "2026-09-15",
+    "title": "Pick up at Moss",
+    "person": "parent",
+    "start": "17:45"
+  },
+  {
+    "date": "2026-09-15",
+    "title": "Parents’ evening",
+    "person": "josie",
+    "start": "19:30"
+  },
+  {
+    "date": "2026-09-17",
+    "title": "Head Acoustics birthday party",
+    "person": "josie",
+    "timeLabel": "Until late"
+  },
+  {
+    "date": "2026-09-19",
+    "title": "Alemannia vs Fortuna Düsseldorf",
+    "person": "alemannia",
+    "start": "14:00"
+  },
+  {
+    "date": "2026-09-21",
+    "title": "Kindergarten-Mitgliederversammlung",
+    "person": "josie",
+    "start": "19:00",
+    "location": "Summerlong"
+  },
+  {
+    "date": "2026-09-23",
+    "title": "OGS Elternabend",
+    "person": "josie",
+    "start": "19:00"
+  },
+  {
+    "date": "2026-09-30",
+    "title": "No school or OGS",
+    "person": "penelope"
+  },
+  {
+    "date": "2026-09-30",
+    "title": "Pick up the kids",
+    "person": "chad"
+  },
+  {
+    "date": "2026-10-03",
+    "title": "Apple picking in Wurmtal – KGS school",
+    "person": "penelope",
+    "timeLabel": "09:45",
+    "note": "Meet at 09:45, Wiesenstraße"
+  },
+  {
+    "date": "2026-10-07",
+    "title": "Kita VL & Elternabend",
+    "person": "josie",
+    "timeLabel": "18:00"
+  },
+  {
+    "date": "2026-10-19",
+    "title": "Pick up Penelope",
+    "person": "chad",
+    "start": "15:00"
+  },
+  {
+    "date": "2026-10-20",
+    "title": "Pick up Penelope",
+    "person": "chad",
+    "start": "15:00"
+  },
+  {
+    "date": "2026-10-21",
+    "title": "Pick up Penelope",
+    "person": "chad",
+    "start": "15:00"
+  },
+  {
+    "date": "2026-10-22",
+    "title": "Pick up Penelope",
+    "person": "chad",
+    "start": "15:00"
+  },
+  {
+    "date": "2026-10-23",
+    "title": "Pick up Penelope",
+    "person": "chad",
+    "start": "15:00"
+  },
+  {
+    "date": "2026-11-13",
+    "title": "Kita St. Martin’s Umzug",
+    "person": "timothy",
+    "timeLabel": "17:45"
+  },
+  {
+    "date": "2026-10-03",
+    "title": "Amsterdam",
+    "person": "chad",
+    "timeLabel": "Afternoon departure",
+    "note": "Away in Amsterdam Saturday and Sunday. Expected back Sunday afternoon."
+  },
+  {
+    "date": "2026-10-04",
+    "title": "Amsterdam – return home",
+    "person": "chad",
+    "timeLabel": "Expected back in the afternoon"
+  },
+  {
+    "date": "2026-10-13",
+    "title": "Finn’s birthday party",
+    "person": "timothy",
+    "start": "15:00",
+    "end": "18:00",
+    "location": "Ballorig"
+  },
+  {
+    "date": "2026-10-24",
+    "title": "Luana’s birthday party",
+    "person": "penelope",
+    "start": "13:00",
+    "end": "16:00"
+  },
+  {
+    "date": "2026-11-24",
+    "title": "Vereinstreffen KGS",
+    "person": "josie",
+    "timeLabel": "19:00",
+    "note": "Treffen im Musikraum"
+  },
+  {
+    "date": "2026-10-01",
+    "title": "Playdate with Milan",
+    "person": "timothy",
+    "timeLabel": "15:30"
+  },
+  {
+    "date": "2026-09-30",
+    "title": "No school or OGS",
+    "person": "penelope"
+  },
+  {
+    "date": "2026-08-31",
+    "title": "Planungstag OGS Team – OGS geschlossen",
+    "person": "penelope"
+  },
+  {
+    "date": "2026-09-01",
+    "title": "Gemeinsamer Planungstag ganze Schule – OGS geschlossen",
+    "person": "penelope"
+  },
+  {
+    "date": "2026-09-02",
+    "title": "1. Schultag – Unterrichtsende für alle 11:45 Uhr",
+    "person": "penelope",
+    "timeLabel": "11:45"
+  },
+  {
+    "date": "2026-09-03",
+    "title": "Einschulung",
+    "person": "penelope"
+  },
+  {
+    "date": "2026-09-08",
+    "title": "Regelbesprechung in den Gruppen",
+    "person": "penelope"
+  },
+  {
+    "date": "2026-09-30",
+    "title": "Pädagogischer Ganztag – kein Unterricht + OGS geschlossen",
+    "person": "penelope"
+  },
+  {
+    "date": "2026-10-06",
+    "title": "Bezugsziehertreffen",
+    "person": "penelope"
+  },
+  {
+    "date": "2026-10-08",
+    "title": "Mitgliederversammlung des Fördervereins der OGS Sonnenschein e. V.",
+    "person": "penelope"
+  },
+  {
+    "date": "2026-10-13",
+    "title": "OGS Sprecher Wahl",
+    "person": "penelope",
+    "timeLabel": "16:00",
+    "note": "Kinder sollen bis 16:00 Uhr in der OGS bleiben"
+  },
+  {
+    "date": "2026-10-19",
+    "title": "Herbstferien – OGS geöffnet",
+    "person": "penelope",
+    "note": "Ferienbetreuung"
+  },
+  {
+    "date": "2026-10-31",
+    "title": "Herbstferien – letzter Ferientag / OGS Ferienbetreuung",
+    "person": "penelope"
+  },
+  {
+    "date": "2026-11-06",
+    "title": "Gemeinschaftsabend",
+    "person": "penelope"
+  },
+  {
+    "date": "2026-11-09",
+    "title": "Martinszug",
+    "person": "penelope",
+    "timeLabel": "18:00"
+  },
+  {
+    "date": "2026-11-11",
+    "title": "St. Martinsfeier in den Gruppen",
+    "person": "penelope"
+  },
+  {
+    "date": "2026-12-04",
+    "title": "Adventfeier OGS mit Kindern und Eltern",
+    "person": "penelope",
+    "note": "SAVE THE DATE"
+  },
+  {
+    "date": "2026-12-07",
+    "title": "Pädagogischer Ganztag – kein Unterricht + OGS geschlossen",
+    "person": "penelope"
+  },
+  {
+    "date": "2026-12-22",
+    "title": "Letzter Schultag vor den Ferien – OGS normal geöffnet",
+    "person": "penelope"
+  },
+  {
+    "date": "2026-12-23",
+    "title": "Weihnachtsferien – OGS geschlossen",
+    "person": "penelope",
+    "note": "23.12.2026–06.01.2027"
+  },
+  {
+    "date": "2027-01-06",
+    "title": "Weihnachtsferien – letzter Ferientag / OGS geschlossen",
+    "person": "penelope"
+  },
+  {
+    "date": "2027-01-11",
+    "title": "Reinigungsvormittag OGS Team",
+    "person": "penelope",
+    "timeLabel": "08:00",
+    "note": "Bis 11:45 Uhr"
+  },
+  {
+    "date": "2027-02-04",
+    "title": "Karneval Altweiber – OGS geöffnet",
+    "person": "penelope",
+    "timeLabel": "11:11",
+    "note": "OGS von 11:11 bis 16:00 Uhr"
+  },
+  {
+    "date": "2027-02-05",
+    "title": "Karnevalsfreitag – Schule + OGS geschlossen",
+    "person": "penelope"
+  },
+  {
+    "date": "2027-02-08",
+    "title": "Rosenmontag – Schule + OGS geschlossen",
+    "person": "penelope"
+  },
+  {
+    "date": "2027-02-09",
+    "title": "Karnevalsdienstag – normale Schule + OGS",
+    "person": "penelope"
+  },
+  {
+    "date": "2027-02-18",
+    "title": "Karneval Karnevalsparty in der OGS Sonnenschein",
+    "person": "penelope",
+    "note": "Infos folgen"
+  },
+  {
+    "date": "2027-02-22",
+    "title": "Bezugserziehertreffen",
+    "person": "penelope"
+  },
+  {
+    "date": "2027-03-22",
+    "title": "Osterferien – OGS geöffnet",
+    "person": "penelope",
+    "note": "Ferienbetreuung bis 03.04.2027"
+  },
+  {
+    "date": "2027-04-03",
+    "title": "Osterferien – letzter Ferientag / OGS Ferienbetreuung",
+    "person": "penelope"
+  },
+  {
+    "date": "2027-04-12",
+    "title": "AG Start",
+    "person": "penelope"
+  },
+  {
+    "date": "2027-04-24",
+    "title": "Schulfest",
+    "person": "penelope"
+  },
+  {
+    "date": "2027-05-06",
+    "title": "Feiertag Christi Himmelfahrt – OGS geschlossen",
+    "person": "penelope"
+  },
+  {
+    "date": "2027-05-07",
+    "title": "Beweglicher Ferientag – Schule + OGS geschlossen",
+    "person": "penelope"
+  },
+  {
+    "date": "2027-05-17",
+    "title": "Feiertag Pfingstmontag – OGS geschlossen",
+    "person": "penelope"
+  },
+  {
+    "date": "2027-05-18",
+    "title": "Beweglicher Ferientag – Schule + OGS geschlossen",
+    "person": "penelope"
+  },
+  {
+    "date": "2027-05-21",
+    "title": "Kennenlernen mit den neuen Erstis",
+    "person": "penelope"
+  },
+  {
+    "date": "2027-05-27",
+    "title": "Feiertag Fronleichnam – Schule + OGS geschlossen",
+    "person": "penelope"
+  },
+  {
+    "date": "2027-05-28",
+    "title": "Beweglicher Ferientag – Schule + OGS geschlossen",
+    "person": "penelope"
+  },
+  {
+    "date": "2027-05-31",
+    "title": "Pädagogischer Ganztag (Teamtag) – Schule + OGS geschlossen",
+    "person": "penelope"
+  },
+  {
+    "date": "2027-07-09",
+    "title": "Abschluss der 4. Klässler",
+    "person": "penelope"
+  },
+  {
+    "date": "2027-07-15",
+    "title": "Letzter OGS Tag mit Abschlussfeier und Aufführung",
+    "person": "penelope"
+  },
+  {
+    "date": "2027-07-16",
+    "title": "Letzter Schultag – OGS geschlossen",
+    "person": "penelope"
+  },
+  {
+    "date": "2027-08-09",
+    "title": "OGS wieder geöffnet – Ferienbetreuung",
+    "person": "penelope",
+    "timeLabel": "08:00",
+    "note": "08:00–16:00 (15:00)"
+  },
+  {
+    "date": "2027-01-01",
+    "title": "Feiertag – Kita geschlossen",
+    "person": "timothy"
+  },
+  {
+    "date": "2027-01-04",
+    "title": "Teamtag – Kita geschlossen",
+    "person": "timothy"
+  },
+  {
+    "date": "2027-02-04",
+    "title": "Fettdonnerstag – Kita ab 13:00 Uhr geschlossen",
+    "person": "timothy",
+    "timeLabel": "11:00",
+    "note": "Feier ab 11:00 Uhr mit Eltern"
+  },
+  {
+    "date": "2027-02-05",
+    "title": "Brückentag – Kita geöffnet für angemeldete Kinder",
+    "person": "timothy",
+    "timeLabel": "07:30",
+    "note": "Bis 15:00 Uhr"
+  },
+  {
+    "date": "2027-02-08",
+    "title": "Rosenmontag – Kita geschlossen",
+    "person": "timothy"
+  },
+  {
+    "date": "2027-03-17",
+    "title": "Elternsprechtag – Kita geschlossen",
+    "person": "timothy"
+  },
+  {
+    "date": "2027-03-25",
+    "title": "Osterfrühstück und Spaziergang mit Eltern",
+    "person": "timothy"
+  },
+  {
+    "date": "2027-03-26",
+    "title": "Karfreitag – Kita geschlossen",
+    "person": "timothy"
+  },
+  {
+    "date": "2027-03-29",
+    "title": "Ostermontag – Kita geschlossen",
+    "person": "timothy"
+  },
+  {
+    "date": "2027-05-06",
+    "title": "Christi Himmelfahrt – Kita geschlossen",
+    "person": "timothy"
+  },
+  {
+    "date": "2027-05-07",
+    "title": "Brückentag – Kita geöffnet für angemeldete Kinder",
+    "person": "timothy",
+    "timeLabel": "07:30",
+    "note": "Bis 15:00 Uhr"
+  },
+  {
+    "date": "2027-05-17",
+    "title": "Pfingstmontag – Kita geschlossen",
+    "person": "timothy"
+  },
+  {
+    "date": "2027-05-27",
+    "title": "Fronleichnam – Kita geschlossen",
+    "person": "timothy"
+  },
+  {
+    "date": "2027-05-28",
+    "title": "Brückentag – Kita geöffnet für angemeldete Kinder",
+    "person": "timothy",
+    "timeLabel": "07:30",
+    "note": "Bis 15:00 Uhr"
+  },
+  {
+    "date": "2027-07-02",
+    "title": "Abschlussfahrt der alten Hasen",
+    "person": "timothy"
+  },
+  {
+    "date": "2027-07-09",
+    "title": "Abschlussfeier der alten Hasen",
+    "person": "timothy",
+    "timeLabel": "17:00",
+    "note": "Für Kinder mit Eltern"
+  },
+  {
+    "date": "2027-07-23",
+    "title": "Betriebsausflug – Kita geschlossen",
+    "person": "timothy"
+  },
+  {
+    "date": "2027-08-06",
+    "title": "Teamtag – Kita geschlossen",
+    "person": "timothy"
+  },
+  {
+    "date": "2027-08-09",
+    "title": "Sommerferien",
+    "person": "timothy",
+    "note": "09.08.–27.08.2027"
+  },
+  {
+    "date": "2027-08-27",
+    "title": "Sommerferien – letzter Ferientag",
+    "person": "timothy"
+  },
+  {
+    "date": "2027-08-30",
+    "title": "Erster Kitatag nach den Ferien",
+    "person": "timothy"
+  },
+  {
+    "date": "2027-09-15",
+    "title": "Elternabend für alle Eltern",
+    "person": "timothy",
+    "start": "19:00"
+  },
+  {
+    "date": "2027-10-01",
+    "title": "Lagerfeuerfest Abenteuerspielplatz",
+    "person": "timothy",
+    "start": "17:00",
+    "note": "17:00–19:00 Uhr, wenn Platz verfügbar"
+  },
+  {
+    "date": "2027-11-01",
+    "title": "Feiertag – Kita geschlossen",
+    "person": "timothy"
+  },
+  {
+    "date": "2027-11-12",
+    "title": "St. Martin – Treffen Parkplatz Bergerstraße",
+    "person": "timothy",
+    "start": "18:00"
+  },
+  {
+    "date": "2027-12-24",
+    "title": "Weihnachtsferien",
+    "person": "timothy",
+    "note": "24.12.–31.12.2027"
+  },
+  {
+    "date": "2027-12-31",
+    "title": "Weihnachtsferien – letzter Ferientag",
+    "person": "timothy"
+  },
+  {
+    "date": "2026-10-10",
+    "title": "Parent-teacher meeting",
+    "person": "penelope",
+    "start": "09:45",
+    "location": "School"
+  },
+  {
+    "date": "2026-10-06",
+    "title": "Tilda play date after ballet",
+    "person": "penelope",
+    "start": "16:30"
+  },
+  {
+    "date": "2026-10-12",
+    "title": "Elternsitzung OGS",
+    "person": "josie",
+    "start": "19:00"
   }
-  return items.sort((a,b)=>(a.start||'').localeCompare(b.start||''));
-}
-function weatherIcon(code){if(code===0)return'☀️';if(code<=2)return'🌤️';if(code===3)return'☁️';if(code===45||code===48)return'🌫️';if(code>=51&&code<=67)return'🌧️';if(code>=71&&code<=77)return'🌨️';if(code>=80&&code<=82)return'🌦️';if(code>=85&&code<=86)return'🌨️';if(code>=95)return'⛈️';return'🌡️'}
-async function getWeather(){const config=SETTINGS.weather||{};const params=new URLSearchParams({latitude:config.latitude,longitude:config.longitude,daily:'weather_code,temperature_2m_max,temperature_2m_min',timezone:config.timezone||'auto',forecast_days:config.forecastDays||16});const data=await fetch('https://api.open-meteo.com/v1/forecast?'+params).then(r=>{if(!r.ok)throw new Error('weather');return r.json()});const weather={};data.daily.time.forEach((date,i)=>weather[date]={icon:weatherIcon(data.daily.weather_code[i]),high:Math.round(data.daily.temperature_2m_max[i]),low:Math.round(data.daily.temperature_2m_min[i])});return weather}
-function scheduleDashboardRefresh(){const now=new Date(),next=new Date(now);next.setSeconds(0,0);next.setMinutes(0);next.setHours(now.getHours()+1);if(next.getHours()>22){next.setDate(next.getDate()+1);next.setHours(7,0,0,0)}else if(next.getHours()<7){next.setHours(7,0,0,0)}setTimeout(()=>location.reload(),Math.max(1000,next-now))}
-function refreshWhenVisible(){let wasHidden=false;document.addEventListener('visibilitychange',()=>{if(document.hidden){wasHidden=true}else if(wasHidden){location.reload()}});window.addEventListener('pageshow',event=>{if(event.persisted)location.reload()})}
+];
+let BIRTHDAYS=[
+  {
+    "md": "09-09",
+    "title": "Dale’s birthday"
+  },
+  {
+    "md": "09-10",
+    "title": "Grumps’s birthday"
+  },
+  {
+    "md": "09-10",
+    "title": "Diane’s birthday"
+  },
+  {
+    "md": "09-14",
+    "title": "Bradford’s birthday"
+  }
+];
+let REPEATS=[
+  {
+    "from": "2026-09-25",
+    "to": "2026-12-31",
+    "weekday": 5,
+    "title": "Pick up the kids",
+    "person": "josie"
+  },
+  {
+    "from": "2026-09-24",
+    "to": "2026-12-31",
+    "weekday": 4,
+    "title": "Pick up the kids",
+    "person": "josie"
+  },
+  {
+    "from": "2026-09-16",
+    "to": "2026-12-31",
+    "weekday": 3,
+    "title": "Pick up the children",
+    "person": "zanthia"
+  },
+  {
+    "from": "2026-09-21",
+    "to": "2026-12-31",
+    "weekday": 1,
+    "title": "Pick up Penelope for swimming",
+    "person": "chad",
+    "start": "15:30",
+    "end": "16:15",
+    "excludedDates": [
+      "2026-10-19",
+      "2026-10-26"
+    ]
+  },
+  {
+    "from": "2026-09-08",
+    "to": "2026-12-31",
+    "weekday": 2,
+    "title": "Pick up Timothy",
+    "person": "chad",
+    "start": "15:10",
+    "end": "15:30"
+  },
+  {
+    "from": "2026-09-08",
+    "to": "2026-12-31",
+    "weekday": 2,
+    "title": "Pick up Penelope for ballet",
+    "person": "chad",
+    "start": "15:30",
+    "end": "15:45"
+  },
+  {
+    "from": "2026-09-15",
+    "to": "2026-12-31",
+    "weekday": 2,
+    "title": "Ballet",
+    "person": "penelope",
+    "start": "15:45",
+    "end": "16:30",
+    "note": "Take ballet things to school · Change into ballet clothes at OGS"
+  },
+  {
+    "from": "2026-09-15",
+    "to": "2026-12-31",
+    "weekday": 2,
+    "title": "Pick up Penelope from ballet",
+    "person": "josie",
+    "start": "16:30"
+  },
+  {
+    "from": "2026-09-14",
+    "to": "2026-12-31",
+    "weekday": 1,
+    "title": "Swimming lesson",
+    "person": "penelope",
+    "start": "16:15",
+    "end": "17:00",
+    "excludedDates": [
+      "2026-10-19",
+      "2026-10-26"
+    ]
+  },
+  {
+    "from": "2026-09-14",
+    "to": "2026-12-31",
+    "weekday": 1,
+    "title": "Pick up Penelope from swimming",
+    "person": "josie",
+    "start": "17:00",
+    "excludedDates": [
+      "2026-10-19",
+      "2026-10-26"
+    ]
+  },
+  {
+    "from": "2026-09-21",
+    "to": "2026-12-31",
+    "weekday": 1,
+    "title": "Football",
+    "person": "timothy",
+    "start": "17:30",
+    "end": "18:30",
+    "responsible": "Chad",
+    "linkedTitle": "Timothy · Football",
+    "excludedDates": [
+      "2026-10-12"
+    ],
+    "overrides": {
+      "2026-10-05": {
+        "start": "16:15",
+        "end": "17:15"
+      }
+    }
+  },
+  {
+    "from": "2026-09-18",
+    "to": "2026-12-31",
+    "weekday": 5,
+    "title": "Football",
+    "person": "timothy",
+    "start": "16:30",
+    "end": "17:30",
+    "responsible": "Chad",
+    "linkedTitle": "Timothy · Football",
+    "excludedDates": [
+      "2026-10-12"
+    ],
+    "overrides": {
+      "2026-10-05": {
+        "start": "16:15",
+        "end": "17:15"
+      }
+    }
+  }
+];
+let SETTINGS={
+  "weather": {
+    "latitude": 50.7753,
+    "longitude": 6.0839,
+    "timezone": "Europe/Berlin",
+    "forecastDays": 16
+  },
+  "holidays": {
+    "2026-01-01": "Neujahr",
+    "2026-04-03": "Karfreitag",
+    "2026-04-06": "Ostermontag",
+    "2026-05-01": "Tag der Arbeit",
+    "2026-05-14": "Christi Himmelfahrt",
+    "2026-05-25": "Pfingstmontag",
+    "2026-06-04": "Fronleichnam",
+    "2026-10-03": "Tag der Deutschen Einheit",
+    "2026-11-01": "Allerheiligen",
+    "2026-12-25": "1. Weihnachtstag",
+    "2026-12-26": "2. Weihnachtstag",
+    "2027-01-01": "Neujahr",
+    "2027-03-26": "Karfreitag",
+    "2027-03-29": "Ostermontag",
+    "2027-05-01": "Tag der Arbeit",
+    "2027-05-06": "Christi Himmelfahrt",
+    "2027-05-17": "Pfingstmontag",
+    "2027-05-27": "Fronleichnam",
+    "2027-10-03": "Tag der Deutschen Einheit",
+    "2027-11-01": "Allerheiligen",
+    "2027-12-25": "1. Weihnachtstag",
+    "2027-12-26": "2. Weihnachtstag",
+    "2028-01-01": "Neujahr",
+    "2028-04-14": "Karfreitag",
+    "2028-04-17": "Ostermontag",
+    "2028-05-01": "Tag der Arbeit",
+    "2028-05-25": "Christi Himmelfahrt",
+    "2028-06-05": "Pfingstmontag",
+    "2028-06-15": "Fronleichnam",
+    "2028-10-03": "Tag der Deutschen Einheit",
+    "2028-11-01": "Allerheiligen",
+    "2028-12-25": "1. Weihnachtstag",
+    "2028-12-26": "2. Weihnachtstag",
+    "2029-01-01": "Neujahr",
+    "2029-03-30": "Karfreitag",
+    "2029-04-02": "Ostermontag",
+    "2029-05-01": "Tag der Arbeit",
+    "2029-05-10": "Christi Himmelfahrt",
+    "2029-05-21": "Pfingstmontag",
+    "2029-05-31": "Fronleichnam",
+    "2029-10-03": "Tag der Deutschen Einheit",
+    "2029-11-01": "Allerheiligen",
+    "2029-12-25": "1. Weihnachtstag",
+    "2029-12-26": "2. Weihnachtstag",
+    "2030-01-01": "Neujahr",
+    "2030-04-19": "Karfreitag",
+    "2030-04-22": "Ostermontag",
+    "2030-05-01": "Tag der Arbeit",
+    "2030-05-30": "Christi Himmelfahrt",
+    "2030-06-10": "Pfingstmontag",
+    "2030-06-20": "Fronleichnam",
+    "2030-10-03": "Tag der Deutschen Einheit",
+    "2030-11-01": "Allerheiligen",
+    "2030-12-25": "1. Weihnachtstag",
+    "2030-12-26": "2. Weihnachtstag"
+  }
+};
+async function unlockCalendar(){ return true; }
