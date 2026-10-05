@@ -52,12 +52,10 @@
   <section class="legend" id="legend"></section>
   <nav class="nav"><button id="prev" aria-label="Previous page">‹</button><button id="today">Today + 6 days</button><button id="next" aria-label="Next page">›</button></nav>
   <section class="week" id="week"></section>
-  <p class="footer">Private encrypted calendar · Refreshes when reopened</p>
+  <p class="footer">Family calendar · Refreshes when reopened</p>
 </main><script src="secure-calendar.js"></script><script>
 (async()=>{
 if(!await unlockCalendar())return;
-  // One-off family update: Tilda comes home with us after ballet on 6 Oct.
-  if(!ONCE.some(e=>e.date==='2026-10-06'&&e.title==='Tilda play date after ballet')) ONCE.push({date:'2026-10-06',title:'Tilda play date after ballet',person:'penelope',start:'16:30'});
 document.querySelector('#unlock').hidden=true;document.querySelector('#dashboard').hidden=false;
 let WEATHER={};
 async function refreshWeather(){try{WEATHER=await getWeather();render()}catch(error){console.warn('Weather unavailable')}}
