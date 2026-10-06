@@ -79,6 +79,7 @@ async function unlockCalendar(){
     removeForDate('2026-10-13',item=>['chad','josie'].includes(item.person)&&titleHas('pick up','drop off','pickup','dropoff')(item));
     removeForDate('2026-10-27',item=>(item.person==='penelope'&&titleHas('ballet')(item))||(item.person==='josie'&&titleHas('pick up','pickup')(item)));
     removeForDate('2026-10-28',item=>item.person==='xanthia'&&titleHas('pick up','pickup')(item));
+    removeForDate('2026-10-28',item=>item.person==='zanthia'&&titleHas('pick up','pickup')(item));
     removeForDate('2026-10-29',item=>item.person==='josie'&&titleHas('pick up','pickup')(item));
     removeForDate('2026-10-30',item=>item.person==='josie'&&titleHas('pick up','pickup')(item));
     ONCE.push({date:'2026-10-25',title:'Josie & Penelope fly to Spain',person:'family'});
