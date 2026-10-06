@@ -65,8 +65,24 @@ async function unlockCalendar(){
     );
     const data=JSON.parse(new TextDecoder().decode(plaintext));
     PEOPLE=data.people;ONCE=data.once;BIRTHDAYS=data.birthdays;REPEATS=data.repeats;SETTINGS=data.settings;
-    // One-off dashboard update: the 6 Oct 2026 Penelope Bezugsziehertreffen was rescheduled.
-    ONCE=ONCE.filter(item=>!(item.date==='2026-10-06'&&item.person==='penelope'&&item.title==='Bezugsziehertreffen'));
+    // One-off dashboard updates: October 2026 schedule changes.
+    const removeForDate=(date,predicate)=>{
+      ONCE=ONCE.filter(item=>!(item.date===date&&predicate(item)));
+      REPEATS=REPEATS.map(repeat=>{
+        if(predicate(repeat))return {...repeat,excludedDates:[...new Set([...(repeat.excludedDates||[]),date])]};
+        return repeat;
+      });
+    };
+    const titleHas=(...terms)=>item=>terms.some(term=>(item.title||'').toLowerCase().includes(term));
+    removeForDate('2026-10-06',item=>item.person==='penelope'&&(item.title||'').toLowerCase()==='bezugsziehertreffen');
+    removeForDate('2026-10-13',item=>item.person==='penelope'&&titleHas('ballet')(item));
+    removeForDate('2026-10-13',item=>['chad','josie'].includes(item.person)&&titleHas('pick up','drop off','pickup','dropoff')(item));
+    removeForDate('2026-10-27',item=>(item.person==='penelope'&&titleHas('ballet')(item))||(item.person==='josie'&&titleHas('pick up','pickup')(item)));
+    removeForDate('2026-10-28',item=>item.person==='xanthia'&&titleHas('pick up','pickup')(item));
+    removeForDate('2026-10-29',item=>item.person==='josie'&&titleHas('pick up','pickup')(item));
+    removeForDate('2026-10-30',item=>item.person==='josie'&&titleHas('pick up','pickup')(item));
+    ONCE.push({date:'2026-10-25',title:'Josie & Penelope fly to Spain',person:'family'});
+    ONCE.push({date:'2026-11-01',title:'Josie & Penelope return from Spain',person:'family'});
     DASHBOARD_ACCESS_KEY=candidate;
     preserveSecretLinks();
     return true;
