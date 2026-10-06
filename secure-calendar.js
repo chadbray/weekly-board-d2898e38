@@ -127,6 +127,24 @@ let REPEATS=[
   {"from":"2026-09-18","to":"2026-12-31","weekday":5,"title":"Football","person":"timothy","start":"16:30","end":"17:30","responsible":"Chad","linkedTitle":"Timothy · Football","excludedDates":["2026-10-12"],"overrides":{"2026-10-05":{"start":"16:15","end":"17:15"}}}
 ];
 let SETTINGS={"weather":{"latitude":50.7753,"longitude":6.0839,"timezone":"Europe/Berlin","forecastDays":16},"holidays":{"2026-01-01":"Neujahr","2026-04-03":"Karfreitag","2026-04-06":"Ostermontag","2026-05-01":"Tag der Arbeit","2026-05-14":"Christi Himmelfahrt","2026-05-25":"Pfingstmontag","2026-06-04":"Fronleichnam","2026-10-03":"Tag der Deutschen Einheit","2026-11-01":"Allerheiligen","2026-12-25":"1. Weihnachtstag","2026-12-26":"2. Weihnachtstag","2027-01-01":"Neujahr","2027-03-26":"Karfreitag","2027-03-29":"Ostermontag","2027-05-01":"Tag der Arbeit","2027-05-06":"Christi Himmelfahrt","2027-05-17":"Pfingstmontag","2027-05-27":"Fronleichnam","2027-10-03":"Tag der Deutschen Einheit","2027-11-01":"Allerheiligen","2027-12-25":"1. Weihnachtstag","2027-12-26":"2. Weihnachtstag","2028-01-01":"Neujahr","2028-04-14":"Karfreitag","2028-04-17":"Ostermontag","2028-05-01":"Tag der Arbeit","2028-05-25":"Christi Himmelfahrt","2028-06-05":"Pfingstmontag","2028-06-15":"Fronleichnam","2028-10-03":"Tag der Deutschen Einheit","2028-11-01":"Allerheiligen","2028-12-25":"1. Weihnachtstag","2028-12-26":"2. Weihnachtstag","2029-01-01":"Neujahr","2029-03-30":"Karfreitag","2029-04-02":"Ostermontag","2029-05-01":"Tag der Arbeit","2029-05-10":"Christi Himmelfahrt","2029-05-21":"Pfingstmontag","2029-05-31":"Fronleichnam","2029-10-03":"Tag der Deutschen Einheit","2029-11-01":"Allerheiligen","2029-12-25":"1. Weihnachtstag","2029-12-26":"2. Weihnachtstag","2030-01-01":"Neujahr","2030-04-19":"Karfreitag","2030-04-22":"Ostermontag","2030-05-01":"Tag der Arbeit","2030-05-30":"Christi Himmelfahrt","2030-06-10":"Pfingstmontag","2030-06-20":"Fronleichnam","2030-10-03":"Tag der Deutschen Einheit","2030-11-01":"Allerheiligen","2030-12-25":"1. Weihnachtstag","2030-12-26":"2. Weihnachtstag"}};
+
+// One-off October 2026 calendar changes.
+const removeForDate=(date,predicate)=>{
+  ONCE=ONCE.filter(item=>!(item.date===date&&predicate(item)));
+  REPEATS=REPEATS.map(repeat=>{
+    if(predicate(repeat))return {...repeat,excludedDates:[...new Set([...(repeat.excludedDates||[]),date])]};
+    return repeat;
+  });
+};
+const titleHas=(...terms)=>item=>terms.some(term=>(item.title||'').toLowerCase().includes(term));
+removeForDate('2026-10-13',item=>['chad','josie'].includes(item.person)&&titleHas('pick up','drop off','pickup','dropoff')(item));
+removeForDate('2026-10-13',item=>item.person==='penelope'&&titleHas('ballet')(item));
+removeForDate('2026-10-27',item=>(item.person==='penelope'&&titleHas('ballet')(item))||(item.person==='josie'&&titleHas('pick up','pickup')(item)));
+removeForDate('2026-10-28',item=>item.person==='zanthia'&&titleHas('pick up','pickup')(item));
+removeForDate('2026-10-29',item=>item.person==='josie'&&titleHas('pick up','pickup')(item));
+removeForDate('2026-10-30',item=>item.person==='josie'&&titleHas('pick up','pickup')(item));
+ONCE.push({date:'2026-10-25',title:'Josie & Penelope fly to Spain',person:'family'});
+ONCE.push({date:'2026-11-01',title:'Josie & Penelope return from Spain',person:'family'});
 async function unlockCalendar(){return true;}
 const pad=n=>String(n).padStart(2,'0'),iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),parse=s=>new Date(s+'T12:00:00'),monday=d=>{d=new Date(d);d.setHours(12,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d},mins=s=>{let[h,m]=s.split(':').map(Number);return h*60+m},dur=(a,b)=>{if(!a||!b)return'';let n=mins(b)-mins(a);return n>=60?Math.floor(n/60)+'h'+(n%60?' '+n%60+'m':''):n+'m'};
 function holidayFor(date){return (SETTINGS.holidays||{})[iso(date)]||''}
