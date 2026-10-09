@@ -37,6 +37,8 @@ let ONCE=[
   {"date":"2026-10-13","title":"Finn’s birthday party","person":"timothy","start":"15:00","end":"18:00","location":"Ballorig"},
   {"date":"2026-10-24","title":"Luana’s birthday party","person":"penelope","start":"13:00","end":"16:00"},
   {"date":"2026-11-24","title":"Vereinstreffen KGS","person":"josie","timeLabel":"19:00","note":"Treffen im Musikraum"},
+  {"date":"2026-10-29","title":"Fakt oder Fake? KI verstehen, Fake News erkennen","person":"josie","start":"19:30","end":"21:00","note":"Online-Elternabend für Eltern von Schulkindern (6–13 Jahre). Anmeldung: https://app.guestoo.de/public/event/aeac9ab6-0c56-4fd6-a7bc-13b4835ad6e2"},
+  {"date":"2026-11-17","title":"Selbstregulation kann man lernen","person":"josie","start":"17:30","end":"19:30","note":"Online-Elternabend mit Dr. Kubesch zu Impulskontrolle und gesunder Lernentwicklung. Anmeldung: https://elternstiftung.de/seminarformat/selbstregulation-kann-man-lernen"},
   {"date":"2026-10-01","title":"Playdate with Milan","person":"timothy","timeLabel":"15:30"},
   {"date":"2026-09-30","title":"No school or OGS","person":"penelope"},
   {"date":"2026-08-31","title":"Planungstag OGS Team – OGS geschlossen","person":"penelope"},
