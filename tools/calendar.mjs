@@ -1,13 +1,11 @@
 #!/usr/bin/env node
-/** Offline AES-256-GCM calendar maintenance. Never prints private payloads or keys. */
-import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
-import { constants as fsConstants } from 'node:fs';
+/** Validate the current public dashboard. Does not publish or print event contents. */
 import * as fs from 'node:fs/promises';
 import path from 'node:path';
+import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-
-const MAX_BYTES = 8 * 1024 * 1024;
+import { createHash } from 'node:crypto';
 const own = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
 const record = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const fail = message => { throw new Error(message); };
@@ -105,329 +103,87 @@ export function validatePayload(data) {
   return data;
 }
 
-function decodeBase64url(value, label) {
-  assert(typeof value === 'string' && /^[A-Za-z0-9_-]+$/.test(value), `Invalid ${label} encoding.`);
-  const decoded = Buffer.from(value, 'base64url');
-  assert(decoded.toString('base64url') === value, `Noncanonical ${label} encoding.`);
-  return decoded;
-}
-
-export function validateEnvelope(envelope) {
-  assert(record(envelope) && Object.keys(envelope).sort().join(',') === 'algorithm,ciphertext,iv,version', 'Unexpected encrypted envelope shape.');
-  assert(envelope.version === 1 && envelope.algorithm === 'AES-GCM', 'Unsupported envelope version or algorithm.');
-  assert(decodeBase64url(envelope.iv, 'IV').length === 12, 'IV must contain 12 bytes.');
-  assert(decodeBase64url(envelope.ciphertext, 'ciphertext').length > 16, 'Ciphertext must include encrypted content and a 16-byte authentication tag.');
-  return envelope;
-}
-
-/** Parse only this small data literal; never evaluate repository JavaScript. */
-export function extractEnvelope(source) {
-  const code = withoutComments(source).replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`/g, value => ' '.repeat(value.length));
-  const starts = new Set([...code.matchAll(/\bconst\s+SECURE_PAYLOAD\s*=\s*\{/g)].map(match => match.index));
-  const matches = [...source.matchAll(/\bconst\s+SECURE_PAYLOAD\s*=\s*(\{[^{}]*\})\s*;/g)].filter(match => starts.has(match.index));
-  assert(matches.length === 1, 'Expected exactly one const SECURE_PAYLOAD object declaration.');
-  const match = matches[0];
-  const literal = match[1];
-  let position = 1;
-  const result = Object.create(null);
-  const whitespace = () => { while (/\s/.test(literal[position] || '') && position < literal.length) position++; };
-  whitespace();
-  while (literal[position] !== '}') {
-    const property = /^(?:"([A-Za-z]+)"|'([A-Za-z]+)'|([A-Za-z]+))\s*:\s*(?:"([^"\\]*)"|'([^'\\]*)'|(\d+))/.exec(literal.slice(position));
-    assert(property, 'Envelope must contain simple data properties only.');
-    const key = property[1] ?? property[2] ?? property[3];
-    assert(!own(result, key), 'Duplicate encrypted envelope property.');
-    result[key] = property[4] ?? property[5] ?? Number(property[6]);
-    position += property[0].length;
-    whitespace();
-    if (literal[position] === '}') break;
-    assert(literal[position++] === ',', 'Invalid envelope property separator.');
-    whitespace();
-  }
-  assert(position === literal.length - 1, 'Invalid encrypted envelope literal.');
-  validateEnvelope(result);
-  const start = match.index + match[0].indexOf('{');
-  return { envelope: result, start, end: start + literal.length };
-}
-
-export function parseKey(value) {
-  assert(typeof value === 'string', 'Supply an AES-256 key.');
-  const text = value.trim();
-  let key;
-  if (/^[0-9a-f]{64}$/i.test(text)) key = Buffer.from(text, 'hex');
-  else if (/^[A-Za-z0-9_-]{43}$/.test(text)) key = decodeBase64url(text, 'key');
-  else if (/^[A-Za-z0-9+/]{43}=$/.test(text)) {
-    key = Buffer.from(text, 'base64');
-    assert(key.toString('base64') === text, 'Invalid key encoding.');
-  } else fail('Key must be 32 bytes encoded as base64url, base64, or hexadecimal.');
-  assert(key.length === 32, 'Key must contain exactly 32 bytes.');
-  return key;
-}
-
-export function decryptEnvelope(envelope, key) {
-  validateEnvelope(envelope);
-  const encrypted = decodeBase64url(envelope.ciphertext, 'ciphertext');
-  let plaintext;
+export function readCalendar(source) {
+  // Run only the checked-out calendar script in an isolated JS context, with no
+  // process, require, network or DOM bindings. VM is not a hostile-code boundary.
+  assert(typeof source === 'string' && source.length < 8 * 1024 * 1024, 'Invalid source size.');
+  assert(!/\bconst\s+SECURE_PAYLOAD\s*=/.test(source), 'Storage mode changed; reconcile the workflow before editing.');
+  let json;
   try {
-    const decipher = createDecipheriv('aes-256-gcm', key, decodeBase64url(envelope.iv, 'IV'), { authTagLength: 16 });
-    decipher.setAuthTag(encrypted.subarray(-16));
-    plaintext = Buffer.concat([decipher.update(encrypted.subarray(0, -16)), decipher.final()]);
-  } catch { fail('Key verification failed: the current payload could not be authenticated. No file was changed.'); }
-  try {
-    let value;
-    try { value = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(plaintext)); }
-    catch { fail('Authenticated payload is not valid UTF-8 JSON.'); }
-    return validatePayload(value);
-  } finally { plaintext.fill(0); }
-}
-
-export function encryptEnvelope(data, key) {
-  validatePayload(data);
-  const iv = randomBytes(12);
-  const plaintext = Buffer.from(JSON.stringify(data), 'utf8');
-  try {
-    const cipher = createCipheriv('aes-256-gcm', key, iv, { authTagLength: 16 });
-    const encrypted = Buffer.concat([cipher.update(plaintext), cipher.final(), cipher.getAuthTag()]);
-    return { version: 1, algorithm: 'AES-GCM', iv: iv.toString('base64url'), ciphertext: encrypted.toString('base64url') };
-  } finally { plaintext.fill(0); }
-}
-
-// Masks comments but preserves strings and byte offsets for conservative static checks.
-function withoutComments(source) {
-  return source.replace(/("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)|(\/\/[^\n]*|\/\*[\s\S]*?\*\/)/g,
-    (match, quoted) => quoted || match.replace(/[^\n]/g, ' '));
-}
-
-function checkPrivateKeyLiterals(source) {
-  assert(!/\bDASHBOARD_ACCESS_KEY\s*(?:=|:)\s*(?:"[^"\n]+"|'[^'\n]+'|`[^`]+`)/.test(source),
-    'Nonempty hard-coded dashboard access key found in runtime.');
-  assert(!/#(?:key|k)=[A-Za-z0-9_+/%=-]+/i.test(source),
-    'Possible hard-coded private-link key found in runtime.');
-}
-
-function checkRuntimeData(source) {
-  const clean = withoutComments(source);
-  // One-off runtime additions may be used for non-sensitive convenience updates.\n  // The encrypted payload remains the canonical private calendar store.
-  for (const name of PRIVATE_COLLECTIONS) {
-    const initializers = new RegExp(`\\b${name}\\s*=\\s*([\\[{])`, 'gi');
-    for (const match of clean.matchAll(initializers)) {
-      const tail = clean.slice(match.index + match[0].length).trimStart();
-      assert(tail.startsWith(match[1] === '[' ? ']' : '}'), 'Nonempty personal-data collection literal found in runtime.');
-    }
-  }
-  assert(!/\b(?:title|person|responsible|linkedTitle)\s*:\s*['"][^'"]+['"][\s\S]{0,240}\b(?:date|from|md)\s*:\s*['"]\d{2,4}-\d{2}/i.test(clean)
-    && !/\b(?:date|from|md)\s*:\s*['"]\d{2,4}-\d{2}[^'"]*['"][\s\S]{0,240}\b(?:title|person|responsible|linkedTitle)\s*:\s*['"][^'"]+['"]/i.test(clean),
-  'Possible hard-coded personal event found in runtime.');
-}
-
-function checkSyntax(source, module = false) {
-  const env = { ...process.env };
-  delete env.CALENDAR_KEY;
-  const result = spawnSync(process.execPath, ['--input-type', module ? 'module' : 'commonjs', '--check'],
-    { input: source, encoding: 'utf8', maxBuffer: MAX_BYTES, env });
-  assert(!result.error && result.status === 0, 'JavaScript syntax check failed. No source excerpts are printed.');
-}
-
-const SKIP_DIRS = new Set(['tools', 'test', 'tests', 'fixtures', 'node_modules', 'coverage', 'vendor']);
-async function runtimeFiles(root, dir = root) {
-  const files = [];
-  for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
-    if (entry.name.startsWith('.') || entry.isSymbolicLink()) continue;
-    const filename = path.join(dir, entry.name);
-    if (entry.isDirectory() && !SKIP_DIRS.has(entry.name)) files.push(...await runtimeFiles(root, filename));
-    else if (entry.isFile() && /\.(?:html?|[cm]?js)$/i.test(entry.name)) files.push(filename);
-  }
-  return files;
-}
-
-async function readLimited(filename) {
-  const stat = await fs.stat(filename);
-  assert(stat.isFile() && stat.size <= MAX_BYTES, 'Expected a regular file no larger than 8 MiB.');
-  return fs.readFile(filename, 'utf8');
-}
-
-export async function checkRepository(repo) {
-  const root = await fs.realpath(repo);
-  const securePath = path.join(root, 'secure-calendar.js');
-  assert(!(await fs.lstat(securePath)).isSymbolicLink(), 'secure-calendar.js must not be a symbolic link.');
-  const secure = await readLimited(securePath);
-  const extracted = extractEnvelope(secure);
-  const files = await runtimeFiles(root);
-  assert(files.some(file => path.relative(root, file) === 'index.html'), 'Expected index.html at the repository root.');
-  let scripts = 0;
-  for (const file of files) {
-    let source = file === securePath ? secure : await readLimited(file);
-    if (file === securePath) source = source.slice(0, extracted.start) + '{}' + source.slice(extracted.end);
-    checkPrivateKeyLiterals(source);
-    if (/\.html?$/i.test(file)) {
-      for (const match of source.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)) {
-        const attributes = match[1];
-        if (/\bsrc\s*=/i.test(attributes)) continue;
-        const typeMatch = /\btype\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i.exec(attributes);
-        const type = (typeMatch?.[1] ?? typeMatch?.[2] ?? typeMatch?.[3] ?? '').toLowerCase();
-        if (type && !['module', 'text/javascript', 'application/javascript'].includes(type)) continue;
-        checkSyntax(match[2], type === 'module');
-        checkRuntimeData(match[2]);
-        scripts++;
-      }
-    } else {
-      checkSyntax(source, file.endsWith('.mjs'));
-      checkRuntimeData(source);
-      scripts++;
-    }
-  }
-  return { files: files.length, scripts };
-}
-
-function inside(root, candidate) {
-  const relative = path.relative(root, candidate);
-  return relative === '' || (!relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative));
-}
-
-async function privatePath(repo, filename, exists) {
-  assert(filename && filename !== '-', 'A private JSON file path is required; stdout/stdin payloads are prohibited.');
-  const requested = path.resolve(filename);
-  assert(!inside(repo, requested), 'Plaintext paths must be outside the checkout.');
-  const resolved = exists ? await fs.realpath(requested) : path.join(await fs.realpath(path.dirname(requested)), path.basename(requested));
-  assert(!inside(repo, resolved), 'Plaintext paths must be outside the checkout, including symlink targets.');
-  if (exists) assert((await fs.lstat(requested)).isFile(), 'Plaintext input must be a regular file, not a symlink.');
-  return resolved;
-}
-
-async function readKey(useStdin) {
-  if (process.env.CALENDAR_KEY !== undefined) {
-    const value = process.env.CALENDAR_KEY;
-    delete process.env.CALENDAR_KEY;
-    assert(!useStdin, 'Choose either CALENDAR_KEY or stdin, not both.');
-    return parseKey(value);
-  }
-  if (useStdin || !process.stdin.isTTY) {
-    const chunks = [];
-    let size = 0;
-    for await (const chunk of process.stdin) {
-      size += chunk.length;
-      assert(size <= 256, 'Key input is too long.');
-      chunks.push(chunk);
-    }
-    const raw = Buffer.concat(chunks);
-    try { return parseKey(raw.toString('utf8')); } finally { raw.fill(0); chunks.forEach(chunk => chunk.fill(0)); }
-  }
-  process.stderr.write('AES-256 key (hidden): ');
-  const input = process.stdin;
-  const wasRaw = input.isRaw;
-  input.setRawMode(true);
-  input.resume();
-  const raw = [];
-  try {
-    const value = await new Promise((resolve, reject) => {
-      const finish = (error) => {
-        input.removeListener('data', onData);
-        input.removeListener('end', onEnd);
-        input.removeListener('error', onError);
-        error ? reject(error) : resolve(Buffer.from(raw).toString('utf8'));
-      };
-      const onEnd = () => finish(new Error('Key entry ended before submission.'));
-      const onError = () => finish(new Error('Key entry failed.'));
-      const onData = chunk => {
-        for (const byte of chunk) {
-          if (byte === 3 || byte === 4) return finish(new Error('Key entry cancelled.'));
-          if (byte === 10 || byte === 13) return finish();
-          if (byte === 127 || byte === 8) raw.pop();
-          else if (byte >= 32 && byte <= 126) raw.push(byte);
-          if (raw.length > 256) return finish(new Error('Key input is too long.'));
-        }
-      };
-      input.on('data', onData);
-      input.once('end', onEnd);
-      input.once('error', onError);
+    json = vm.runInNewContext(source + '\nJSON.stringify({people:PEOPLE,once:ONCE,birthdays:BIRTHDAYS,repeats:REPEATS,settings:SETTINGS})', Object.create(null), {
+      timeout: 1000, contextCodeGeneration: { strings: false, wasm: false }
     });
-    return parseKey(value);
-  } finally {
-    raw.fill(0);
-    input.setRawMode(wasRaw);
-    input.pause();
-    process.stderr.write('\n');
-  }
+  } catch { fail('Calendar runtime evaluation failed; no event contents are printed.'); }
+  return validatePayload(JSON.parse(json));
 }
-
-function parseArgs(argv) {
-  const [command, ...args] = argv;
-  assert(['decrypt', 'encrypt', 'check'].includes(command), 'Use decrypt, encrypt, or check. See README for usage.');
-  const parsed = { command, repo: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'), keyStdin: false };
-  const seen = new Set();
-  for (let i = 0; i < args.length; i++) {
-    const option = args[i];
-    assert(['--repo', '--in', '--out', '--key-stdin'].includes(option) && !seen.has(option), 'Unknown or repeated command option. Keys must never be passed in command arguments.');
-    seen.add(option);
-    if (option === '--key-stdin') parsed.keyStdin = true;
-    else {
-      assert(args[i + 1] && !args[i + 1].startsWith('--'), 'A command option is missing its path.');
-      parsed[option.slice(2)] = args[++i];
-    }
+const stable = value => JSON.stringify(value, function (key, item) {
+  return record(item) ? Object.fromEntries(Object.keys(item).sort().map(k => [k, item[k]])) : item;
+});
+function duplicates(events) {
+  const counts = new Map();
+  for (const e of events) {
+    const key = stable([e.person,e.date,e.start ?? '',e.end ?? '',e.title.trim().toLowerCase()]);
+    counts.set(key,(counts.get(key) || 0)+1);
   }
-  assert(command === 'decrypt' ? parsed.out && !parsed.in : command === 'encrypt' ? parsed.in && !parsed.out : !parsed.in && !parsed.out && !parsed.keyStdin,
-    'decrypt requires --out; encrypt requires --in; check takes only optional --repo.');
-  return parsed;
+  return counts;
 }
-
-export async function main(argv = process.argv.slice(2)) {
-  assert(Number(process.versions.node.split('.')[0]) >= 20, 'Node.js 20 or newer is required.');
-  const args = parseArgs(argv);
-  const repo = await fs.realpath(args.repo);
-  const result = await checkRepository(repo);
-  if (args.command === 'check') {
-    process.stdout.write(`OK: envelope, ${result.files} runtime files and ${result.scripts} scripts checked. No key needed.\n`);
-    return;
+export function compareCalendars(before, after, { allowedOnce = [], allowAdditions = false } = {}) {
+  validatePayload(before); validatePayload(after);
+  assert(allowedOnce.every(i => Number.isInteger(i) && i >= 0 && i < before.once.length), 'Invalid permitted event index.');
+  assert(new Set(allowedOnce).size === allowedOnce.length, 'Duplicate permitted index.');
+  assert(after.once.length >= before.once.length, 'Removal/reordering requires a separately reviewed comparison.');
+  assert(allowAdditions || after.once.length === before.once.length, 'Unexpected added event.');
+  for (const key of new Set([...Object.keys(before), ...Object.keys(after)])) {
+    if (key !== 'once') assert(stable(before[key]) === stable(after[key]), 'An unrelated calendar collection changed.');
   }
-  const plaintextPath = await privatePath(repo, args.in || args.out, args.command === 'encrypt');
-  const securePath = path.join(repo, 'secure-calendar.js');
-  const source = await readLimited(securePath);
-  const parsed = extractEnvelope(source);
-  const key = await readKey(args.keyStdin);
-  try {
-    // Authentication of CURRENT data is mandatory even when replacing every event.
-    // This prevents a mistyped key from silently rotating the published calendar key.
-    const current = decryptEnvelope(parsed.envelope, key);
-    if (args.command === 'decrypt') {
-      const flags = fsConstants.O_WRONLY | fsConstants.O_CREAT | fsConstants.O_EXCL | (fsConstants.O_NOFOLLOW || 0);
-      const output = await fs.open(plaintextPath, flags, 0o600);
-      try {
-        await output.writeFile(`${JSON.stringify(current, null, 2)}\n`, 'utf8');
-        await output.sync();
-      } catch (error) {
-        await output.close();
-        await fs.unlink(plaintextPath).catch(() => {});
-        throw error;
-      }
-      await output.close();
-      process.stdout.write('Decrypted JSON saved outside the checkout with owner-only permissions. No plaintext printed.\n');
-    } else {
-      let next;
-      try { next = JSON.parse(await readLimited(plaintextPath)); }
-      catch (error) {
-        if (error instanceof SyntaxError) fail('Private input is not valid JSON. No contents are printed.');
-        throw error;
-      }
-      validatePayload(next);
-      const replacement = JSON.stringify(encryptEnvelope(next, key));
-      const updated = source.slice(0, parsed.start) + replacement + source.slice(parsed.end);
-      checkSyntax(updated);
-      assert(await readLimited(securePath) === source, 'Runtime changed during this operation. Retry from the latest checkout.');
-      const temp = path.join(repo, `.calendar-envelope-${randomBytes(8).toString('hex')}.tmp`);
-      try {
-        await fs.writeFile(temp, updated, { flag: 'wx', mode: (await fs.stat(securePath)).mode & 0o777 });
-        await fs.rename(temp, securePath);
-      } finally { await fs.unlink(temp).catch(() => {}); }
-      process.stdout.write('Encrypted envelope updated with a fresh IV and the verified existing key. Runtime code unchanged.\n');
-    }
-  } finally { key.fill(0); }
+  for (let i=0;i<before.once.length;i++) {
+    if (!allowedOnce.includes(i)) assert(stable(before.once[i]) === stable(after.once[i]), 'An unrelated event changed.');
+  }
+  const prior = duplicates(before.once);
+  for (const [key,count] of duplicates(after.once)) assert(count <= Math.max(1,prior.get(key) || 0), 'A new duplicate event was introduced.');
+  return { added: after.once.length-before.once.length, modified: allowedOnce.filter(i=>stable(before.once[i])!==stable(after.once[i])).length };
 }
-
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  main().catch(error => {
-    // OS/JSON parser errors can contain paths or excerpts; expose only safe messages.
-    const safe = !error.code && error.constructor === Error;
-    process.stderr.write(`Error: ${safe ? error.message : 'File operation or validation failed. Check paths, permissions and input structure.'}\n`);
-    process.exitCode = 1;
-  });
+function syntax(source, module = false) {
+  const result = spawnSync(process.execPath,['--input-type',module ? 'module':'commonjs','--check'],{input:source,encoding:'utf8'});
+  assert(!result.error && result.status===0,'JavaScript syntax check failed; no source excerpts are printed.');
+}
+export async function checkRepository(repo) {
+  const source=await fs.readFile(path.join(repo,'secure-calendar.js'),'utf8');
+  const html=await fs.readFile(path.join(repo,'index.html'),'utf8');
+  syntax(source);
+  assert(/<script\b[^>]*\bsrc=["']secure-calendar\.js(?:\?[^"']*)?["']/i.test(html),'Canonical script reference is missing.');
+  for (const id of ['prev','next','today','week']) assert(new RegExp('id=["\x27]'+id+'["\x27]').test(html),'A navigation/display element is missing.');
+  for (const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)) {
+    if (!/\bsrc\s*=/i.test(match[1])) syntax(match[2], /type=["']module["']/.test(match[1]));
+  }
+  assert(!/#(?:key|k)=[A-Za-z0-9_+/%=-]+/i.test(source+html),'Unexpected private-link key in public assets.');
+  const data=readCalendar(source);
+  return { events:data.once.length, duplicateGroups:[...duplicates(data.once).values()].filter(n=>n>1).length,
+    sha256:createHash('sha256').update(source).digest('hex') };
+}
+async function main(args) {
+  const command=args.shift();
+  const options={};
+  while(args.length) {
+    const key=args.shift();
+    assert(['--repo','--before','--allow-once','--allow-additions','--expect-source-sha'].includes(key),'Unknown option.');
+    assert(!(key in options),'Duplicate option.');
+    options[key]=key==='--allow-additions' ? true : args.shift();
+    assert(options[key]!==undefined,'Missing option value.');
+  }
+  const repo=path.resolve(options['--repo'] || fileURLToPath(new URL('..',import.meta.url)));
+  assert(['check','compare'].includes(command),'Use check or compare. Encryption commands are retired for the current public dashboard.');
+  const result=await checkRepository(repo);
+  if(options['--expect-source-sha']) assert(result.sha256===options['--expect-source-sha'],'Source changed since it was read; reload and reconcile.');
+  if(command==='compare') {
+    assert(options['--before'],'compare requires --before with the original script.');
+    const before=readCalendar(await fs.readFile(options['--before'],'utf8'));
+    const after=readCalendar(await fs.readFile(path.join(repo,'secure-calendar.js'),'utf8'));
+    const allowedOnce=options['--allow-once'] ? options['--allow-once'].split(',').map(v=>/^\d+$/.test(v)?Number(v):NaN) : [];
+    console.log(JSON.stringify(compareCalendars(before,after,{allowedOnce,allowAdditions:options['--allow-additions']===true})));
+  }
+  console.log(JSON.stringify({ok:true,...result}));
+}
+if(process.argv[1] && path.resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
+  main(process.argv.slice(2)).catch(error=>{console.error(error.message);process.exitCode=1;});
 }
