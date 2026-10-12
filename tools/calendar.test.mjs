@@ -34,3 +34,12 @@ test('all-day and kickoff-only additions preserve existing data and reject dupli
   after.once.push(clone(allDay));
   assert.throws(()=>compareCalendars(before,after,{allowAdditions:true}),/duplicate/);
 });
+
+test('provisional window reminder is one untimed addition preserving unrelated events',()=>{
+  const before=fixture(),after=clone(before);
+  after.once.push({person:'adult',date:'2030-05-03',title:'Synthetic fixture — provisional 3–5 May 2030',timeLabel:'Match date/time TBC',homeGame:true,note:'Placeholder reminder; game may be any day in 3–5 May 2030, not a confirmed Friday fixture.'});
+  assert.deepEqual(compareCalendars(before,after,{allowAdditions:true}),{added:1,modified:0});
+  assert.equal(Object.hasOwn(after.once[1],'start'),false);
+  assert.equal(Object.hasOwn(after.once[1],'end'),false);
+  assert.deepEqual(readCalendar(source(after)),after);
+});
