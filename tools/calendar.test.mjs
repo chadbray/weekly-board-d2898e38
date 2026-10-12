@@ -19,3 +19,18 @@ test('only explicitly allowed event indices may change',()=>{const before=fixtur
 test('rejects duplicate retries, preserves existing duplicates and rejects removals',()=>{const before=fixture(),after=clone(before);after.once.push(clone(after.once[0]));assert.throws(()=>compareCalendars(before,after,{allowAdditions:true}),/duplicate/);assert.doesNotThrow(()=>compareCalendars(after,clone(after)));assert.throws(()=>compareCalendars(after,before),/Removal/);assert.throws(()=>compareCalendars(before,before,{allowedOnce:[9]}),/index/);});
 test('validates scripts, navigation and canonical asset',async t=>{const repo=await setup(t);assert.equal((await checkRepository(repo)).events,1);await fs.writeFile(path.join(repo,'index.html'),html+'<script>function broken( {</script>');await assert.rejects(checkRepository(repo),/syntax/);await fs.writeFile(path.join(repo,'index.html'),'<script src="other.js"></script>');await assert.rejects(checkRepository(repo),/Canonical/);});
 test('source fingerprint rejects stale inputs; CLI compare verifies preservation',async t=>{const repo=await setup(t),tool=fileURLToPath(new URL('./calendar.mjs',import.meta.url));const before=path.join(repo,'before.txt');await fs.writeFile(before,source(fixture()));const run=args=>spawnSync(process.execPath,[tool,...args,'--repo',repo],{encoding:'utf8'});assert.equal(run(['check','--expect-source-sha','0'.repeat(64)]).status,1);assert.equal(run(['compare','--before',before]).status,0);const result=run(['decrypt']);assert.equal(result.status,1);assert.match(result.stderr,/retired/);assert.doesNotMatch(result.stdout+result.stderr,/Example Adult|Synthetic/);});
+
+test('all-day and kickoff-only additions preserve existing data and reject duplicate retries',()=>{
+  const before=fixture(),after=clone(before);
+  const allDay={person:'adult',date:'2030-05-03',title:'Synthetic all-day',timeLabel:'All day'};
+  const kickoff={person:'adult',date:'2030-05-04',title:'Synthetic home fixture',start:'14:00',homeGame:true,note:'Europe/Berlin'};
+  after.once.push(allDay,kickoff);
+  assert.deepEqual(compareCalendars(before,after,{allowAdditions:true}),{added:2,modified:0});
+  assert.equal(Object.hasOwn(after.once[1],'start'),false);
+  assert.equal(Object.hasOwn(after.once[1],'end'),false);
+  assert.equal(Object.hasOwn(after.once[2],'end'),false);
+  const runtime=source(before)+'\nONCE.push('+JSON.stringify(allDay)+');\nONCE.push('+JSON.stringify(kickoff)+');';
+  assert.deepEqual(readCalendar(runtime),after);
+  after.once.push(clone(allDay));
+  assert.throws(()=>compareCalendars(before,after,{allowAdditions:true}),/duplicate/);
+});

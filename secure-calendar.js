@@ -152,6 +152,10 @@ ONCE.push({date:'2026-10-25',title:'Josie & Penelope fly to Spain',person:'famil
 ONCE.push({date:'2026-11-01',title:'Josie & Penelope return from Spain',person:'family'});
 ONCE.push({date:'2026-10-19',title:'Wax',person:'josie',start:'18:00'});
 ONCE.push({date:'2026-10-09',title:'Nail appointment',person:'josie',start:'17:00'});
+ONCE.push({date:'2026-10-16',title:'Team day',person:'chad',timeLabel:'All day'});
+ONCE.push({"date":"2026-10-17","title":"Alemannia vs FC Hansa Rostock","person":"family","start":"14:00","homeGame":true,"location":"Tivoli","note":"Men’s first team · 3. Liga 2026/27 · Home league game. Kickoff Europe/Berlin. Official fixture: https://www.alemannia-aachen.de/profis/spiele-tabelle/"});
+ONCE.push({"date":"2026-11-01","title":"Alemannia vs Preußen Münster","person":"family","start":"19:30","homeGame":true,"location":"Tivoli","note":"Men’s first team · 3. Liga 2026/27 · Home league game. Kickoff Europe/Berlin. Official fixture: https://www.alemannia-aachen.de/profis/spiele-tabelle/"});
+ONCE.push({"date":"2026-11-21","title":"Alemannia vs SV Waldhof Mannheim","person":"family","start":"16:30","homeGame":true,"location":"Tivoli","note":"Men’s first team · 3. Liga 2026/27 · Home league game. Kickoff Europe/Berlin. Official fixture: https://www.alemannia-aachen.de/profis/spiele-tabelle/"});
 async function unlockCalendar(){return true;}
 const pad=n=>String(n).padStart(2,'0'),iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),parse=s=>new Date(s+'T12:00:00'),monday=d=>{d=new Date(d);d.setHours(12,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d},mins=s=>{let[h,m]=s.split(':').map(Number);return h*60+m},dur=(a,b)=>{if(!a||!b)return'';let n=mins(b)-mins(a);return n>=60?Math.floor(n/60)+'h'+(n%60?' '+n%60+'m':''):n+'m'};
 function holidayFor(date){return (SETTINGS.holidays||{})[iso(date)]||''}
