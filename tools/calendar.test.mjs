@@ -43,3 +43,11 @@ test('provisional window reminder is one untimed addition preserving unrelated e
   assert.equal(Object.hasOwn(after.once[1],'end'),false);
   assert.deepEqual(readCalendar(source(after)),after);
 });
+
+test('simplifying event notes retains source metadata and changes only approved index',()=>{
+  const before=fixture();before.once[0].note='Synthetic detail';before.once[0].source='https://example.com/fixture';
+  const after=clone(before);delete after.once[0].note;
+  assert.deepEqual(compareCalendars(before,after,{allowedOnce:[0]}),{added:0,modified:1});
+  assert.equal(readCalendar(source(after)).once[0].source,'https://example.com/fixture');
+  assert.equal(Object.hasOwn(readCalendar(source(after)).once[0],'note'),false);
+});
