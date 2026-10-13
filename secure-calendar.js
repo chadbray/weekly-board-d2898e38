@@ -114,7 +114,15 @@ let ONCE=[
   {"date":"2026-10-12","title":"Elternsitzung OGS","person":"josie","start":"19:00"},
   {"date":"2026-11-02","title":"OGS Förderverein online meeting","person":"josie","start":"19:00"},
   {"date":"2026-11-30","title":"OGS Förderverein at school","person":"josie","start":"19:00"},
-  {"date":"2026-11-20","title":"Kita Weihnachtsfeier Aachen","person":"josie","start":"17:30"}
+  {"date":"2026-11-20","title":"Kita Weihnachtsfeier Aachen","person":"josie","start":"17:30"},
+  {"date":"2026-11-05","title":"Chad away with Dom (5–8 Nov)","person":"chad"},
+  {"date":"2026-11-06","title":"Chad away with Dom (5–8 Nov)","person":"chad"},
+  {"date":"2026-11-07","title":"Chad away with Dom (5–8 Nov)","person":"chad"},
+  {"date":"2026-11-08","title":"Chad away with Dom (5–8 Nov)","person":"chad"},
+  {"date":"2026-11-27","title":"Andrew, Fiona, Walter & Ellie visiting (27–30 Nov)","person":"family"},
+  {"date":"2026-11-28","title":"Andrew, Fiona, Walter & Ellie visiting (27–30 Nov)","person":"family"},
+  {"date":"2026-11-29","title":"Andrew, Fiona, Walter & Ellie visiting (27–30 Nov)","person":"family"},
+  {"date":"2026-11-30","title":"Andrew, Fiona, Walter & Ellie visiting (27–30 Nov)","person":"family"},
 ];
 let BIRTHDAYS=[{"md":"09-09","title":"Dale’s birthday"},{"md":"09-10","title":"Grumps’s birthday"},{"md":"09-10","title":"Diane’s birthday"},{"md":"09-14","title":"Bradford’s birthday"}];
 let REPEATS=[
