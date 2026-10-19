@@ -178,6 +178,7 @@ ONCE.push({"date":"2027-05-07","title":"Alemannia v SG Sonnenhof Großaspach —
 ONCE.push({"date":"2027-05-14","title":"Alemannia v MSV Duisburg — provisional 14–16 May 2027","person":"family","timeLabel":"Time TBC","homeGame":true,"source":"https://datencenter.dfb.de/competitions/3-liga/seasons/2026-2027/teams/alemannia-aachen"});
 ONCE.push({"date":"2026-11-27","title":"Hair appointment","person":"josie","start":"15:30"});
 ONCE.push({"date":"2026-11-27","title":"Hair appointment","person":"timothy","start":"15:30"});
+ONCE.push({"date":"2026-10-23","title":"Playdate at Milan’s house","person":"timothy","timeLabel":"After Kita"});
 async function unlockCalendar(){return true;}
 const pad=n=>String(n).padStart(2,'0'),iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),parse=s=>new Date(s+'T12:00:00'),monday=d=>{d=new Date(d);d.setHours(12,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d},mins=s=>{let[h,m]=s.split(':').map(Number);return h*60+m},dur=(a,b)=>{if(!a||!b)return'';let n=mins(b)-mins(a);return n>=60?Math.floor(n/60)+'h'+(n%60?' '+n%60+'m':''):n+'m'};
 function holidayFor(date){return (SETTINGS.holidays||{})[iso(date)]||''}
