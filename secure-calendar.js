@@ -153,6 +153,7 @@ const removeForDate=(date,predicate)=>{
 const titleHas=(...terms)=>item=>terms.some(term=>(item.title||'').toLowerCase().includes(term));
 removeForDate('2026-10-13',item=>['chad','josie'].includes(item.person)&&titleHas('pick up','drop off','pickup','dropoff')(item));
 removeForDate('2026-10-13',item=>item.person==='penelope'&&titleHas('ballet')(item));
+removeForDate('2026-10-20',titleHas('ballet'));
 removeForDate('2026-10-27',item=>(item.person==='penelope'&&titleHas('ballet')(item))||(item.person==='josie'&&titleHas('pick up','pickup')(item)));
 removeForDate('2026-10-28',item=>item.person==='zanthia'&&titleHas('pick up','pickup')(item));
 removeForDate('2026-10-29',item=>item.person==='josie'&&titleHas('pick up','pickup')(item));
