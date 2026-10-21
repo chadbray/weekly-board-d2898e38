@@ -41,7 +41,7 @@
     .page-nav a{flex:1;text-align:center}.page-link{margin:18px 0}
     button,a{-webkit-tap-highlight-color:transparent}button:focus-visible,a:focus-visible{outline:3px solid var(--orange);outline-offset:3px}
     #month-page{margin-top:44px;border-top:2px solid var(--line);padding-top:28px}
-    #month-heading{font-size:30px;margin:0 0 20px}.month-help{color:var(--muted);font-size:14px}
+    #month-heading{font-size:clamp(22px,5vw,30px);margin:0;text-align:center}.month-nav{align-items:center}.month-reset{display:block;margin:0 auto 12px;min-height:44px;padding:8px 16px;border:1px solid var(--line);border-radius:12px;background:white;color:var(--ink);font:inherit;font-weight:750}.month-help{color:var(--muted);font-size:14px}
     .month-grid,.month-weekdays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
     .month-weekdays{text-align:center;font-size:12px;font-weight:800;margin-bottom:8px}
     .month-date{font:inherit;color:var(--ink);min-width:0;min-height:116px;text-align:left;border:1px solid var(--line);border-radius:12px;padding:9px;background:white;cursor:pointer;overflow-wrap:anywhere}
@@ -68,8 +68,8 @@
   </section>
   <section id="month-page" aria-labelledby="month-heading">
     <p class="eyebrow">PAGE 2 · MONTH VIEW</p>
-    <h2 id="month-heading" aria-live="polite"></h2>
-    <nav class="nav" aria-label="Month navigation"><button id="month-prev" aria-label="Previous month">‹</button><button id="month-today">This month</button><button id="month-next" aria-label="Next month">›</button></nav>
+    <nav class="nav month-nav" aria-label="Month navigation"><button id="month-prev" aria-label="Previous month">‹</button><h2 id="month-heading" aria-live="polite"></h2><button id="month-next" aria-label="Next month">›</button></nav>
+    <button id="month-today" class="month-reset" hidden>Back to current month</button>
     <p class="month-help">Select a date to see all its events below.</p>
     <div class="month-weekdays" aria-hidden="true"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
     <div class="month-grid" id="month-grid" aria-label="Month dates"></div>
@@ -98,6 +98,8 @@ function monthDayCard(d){
 function renderMonth(){
   const label=monthAnchor.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
   document.querySelector('#month-heading').textContent=label;
+  const now=currentDay();
+  document.querySelector('#month-today').hidden=monthAnchor.getFullYear()===now.getFullYear()&&monthAnchor.getMonth()===now.getMonth();
   const first=new Date(monthAnchor);first.setDate(1-((first.getDay()+6)%7));
   const days=new Date(monthAnchor.getFullYear(),monthAnchor.getMonth()+1,0,12).getDate();
   const cells=Math.ceil((((monthAnchor.getDay()+6)%7)+days)/7)*7;
