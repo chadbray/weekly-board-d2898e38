@@ -34,23 +34,99 @@
     .unlock-form{display:grid;gap:10px}.unlock-form input{width:100%;border:1px solid #CBD9E4;border-radius:12px;padding:12px 13px;font:inherit;color:#304D5E;background:#fff}.unlock-form button{border:0;border-radius:12px;padding:12px 14px;background:#7B72B4;color:#fff;font:inherit;font-weight:850;cursor:pointer}
     .unlock-error{margin:12px 0 0!important;color:#A84747!important;font-weight:750}
 
+
+    html{scroll-behavior:smooth;scroll-padding-top:80px}
+    .page-nav{position:sticky;top:0;z-index:2;display:flex;gap:10px;background:var(--paper);padding:10px 0 14px}
+    .page-nav a,.page-link{display:inline-block;color:var(--ink);background:white;border:1px solid var(--line);border-radius:12px;padding:12px 16px;text-decoration:none;font-weight:800}
+    .page-nav a{flex:1;text-align:center}.page-link{margin:18px 0}
+    button,a{-webkit-tap-highlight-color:transparent}button:focus-visible,a:focus-visible{outline:3px solid var(--orange);outline-offset:3px}
+    #month-page{margin-top:44px;border-top:2px solid var(--line);padding-top:28px}
+    #month-heading{font-size:30px;margin:0 0 20px}.month-help{color:var(--muted);font-size:14px}
+    .month-grid,.month-weekdays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+    .month-weekdays{text-align:center;font-size:12px;font-weight:800;margin-bottom:8px}
+    .month-date{font:inherit;color:var(--ink);min-width:0;min-height:116px;text-align:left;border:1px solid var(--line);border-radius:12px;padding:9px;background:white;cursor:pointer;overflow-wrap:anywhere}
+    .month-date.weekend{background:#EAF4EF}.month-date.holiday{background:#EEEAF7}
+    .month-date.outside{background:transparent;color:var(--muted)}
+    .month-date.today .date-number{background:var(--ink);color:white;border-radius:50%}
+    .date-number{display:inline-grid;place-items:center;min-width:26px;height:26px;font-weight:850}
+    .month-date[aria-pressed="true"]{outline:2px solid var(--orange);outline-offset:-2px}
+    .month-count{display:block;font-size:11px;color:var(--muted);margin-top:5px}
+    .month-preview{display:block;font-size:11px;line-height:1.35;margin-top:6px}
+    .month-preview span{display:block;border-left:3px solid;padding-left:4px;margin-top:4px}
+    #month-agenda{margin-top:20px}#month-agenda h3.selected-heading{font-size:19px;margin:0 0 12px}
+    @media(max-width:600px){.month-grid,.month-weekdays{gap:3px}.month-date{min-height:76px;padding:4px 2px;text-align:center;border-radius:8px}.month-preview{display:none}.month-count{font-size:10px}.month-date .date-number{min-width:25px}main{padding-left:10px;padding-right:10px}.event h3{overflow-wrap:anywhere}.nav button{min-height:44px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
   </style>
 </head>
 <body><main id="dashboard">
-  <header><p class="eyebrow">FAMILY DASHBOARD</p><h1>Our week</h1><p class="range" id="range"></p></header>
+  <nav class="page-nav" aria-label="Calendar pages"><a href="#week-page">1 · Week</a><a href="#month-page">2 · Month ↓</a></nav>
+  <section id="week-page" aria-label="Week view"><header><p class="eyebrow">FAMILY DASHBOARD</p><h1>Our week</h1><p class="range" id="range"></p></header>
   <section class="legend" id="legend"></section>
-  <nav class="nav"><button id="prev" aria-label="Previous page">‹</button><button id="today">Today + 6 days</button><button id="next" aria-label="Next page">›</button></nav>
+  <nav class="nav"><button id="prev" aria-label="Previous day">‹</button><button id="today">Today + 6 days</button><button id="next" aria-label="Next day">›</button></nav>
   <section class="week" id="week"></section>
+  <a class="page-link" href="#month-page">Go to month view ↓</a>
+  </section>
+  <section id="month-page" aria-labelledby="month-heading">
+    <p class="eyebrow">PAGE 2 · MONTH VIEW</p>
+    <h2 id="month-heading" aria-live="polite"></h2>
+    <nav class="nav" aria-label="Month navigation"><button id="month-prev" aria-label="Previous month">‹</button><button id="month-today">This month</button><button id="month-next" aria-label="Next month">›</button></nav>
+    <p class="month-help">Select a date to see all its events below.</p>
+    <div class="month-weekdays" aria-hidden="true"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+    <div class="month-grid" id="month-grid" aria-label="Month dates"></div>
+    <section id="month-agenda" aria-label="Selected date events" aria-live="polite"></section>
+    <a class="page-link" href="#week-page">↑ Back to week view</a>
+  </section>
   <p class="footer">Family calendar · Refreshes when reopened</p>
 </main><script src="secure-calendar.js?v=20261014-5"></script><script>
 (async()=>{
 let WEATHER={};
-async function refreshWeather(){try{WEATHER=await getWeather();render()}catch(error){console.warn('Weather unavailable')}}
+async function refreshWeather(){try{WEATHER=await getWeather();render();renderMonth()}catch(error){console.warn('Weather unavailable')}}
 let dayOffset=0;const currentDay=()=>{let d=new Date();d.setHours(12,0,0,0);return d};
 function pageStart(){let d=currentDay();d.setDate(d.getDate()+dayOffset);return d}
 document.querySelector('#legend').innerHTML=Object.values(PEOPLE).map(p=>`<span><i style="background:${p.color}"></i>${p.name}</span>`).join('');
 function render(){let anchor=pageStart(),end=new Date(anchor);end.setDate(end.getDate()+6);document.querySelector('#range').textContent=`${anchor.toLocaleDateString('en-GB',{day:'numeric',month:'short'})} – ${end.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}`;let today=iso(new Date()),prev=document.querySelector('#prev'),centre=document.querySelector('#today');prev.disabled=false;prev.style.opacity='1';centre.textContent=dayOffset===0?'Today + 6 days':`${anchor.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})} – ${end.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})}`;document.querySelector('#week').innerHTML=Array.from({length:7},(_,i)=>{let d=new Date(anchor);d.setDate(d.getDate()+i);let list=itemsFor(d),holiday=holidayFor(d),weather=WEATHER[iso(d)],weekend=d.getDay()===0||d.getDay()===6;return `<article class="day ${weekend?'weekend ':''}${holiday?'holiday ':''}${iso(d)===today?'today':''}"><div class="dayhead"><span>${d.toLocaleDateString('en-GB',{weekday:'short'})}</span><strong>${d.getDate()}</strong>${holiday?`<small class="holiday-label"><b>${holiday}</b><br>Public holiday</small>`:''}${weather?`<small class="weather">${weather.icon} ${weather.high}°/${weather.low}°</small>`:''}</div><div class="events">${list.length?list.map(e=>{let p=PEOPLE[e.person];let badge=e.birthday?'🎂 Birthday':e.homeGame?'⚽ Home':'';let main=`<div class="event" style="border-color:${p.color};background:${p.color}2B"><div class="eventtop"><span class="person" style="color:${p.color}">${p.name}</span>${badge?`<span class="type">${badge}</span>`:''}</div><h3>${e.title}</h3>${e.start?`<p class="time">${e.start}${e.end?'–'+e.end:''}${dur(e.start,e.end)?` <em>${dur(e.start,e.end)}</em>`:''}</p>`:!e.birthday?`<p class="time tbc">${e.timeLabel||'Time TBC'}</p>`:''}${e.note?`<p class="event-note">🎒 ${e.note}</p>`:''}</div>`;if(!e.responsible)return main;let adult=PEOPLE[e.responsible.toLowerCase()];return `<div class="eventpair">${main}<div class="event linked" style="border-color:${adult.color};background:${adult.color}22"><div class="eventtop"><span class="person" style="color:${adult.color}">${adult.name}</span><span class="type">Taking</span></div><h3>${e.linkedTitle||e.title}</h3><p class="time ${e.start?'':'tbc'}">${e.start?`${e.start}${e.end?'–'+e.end:''}`:(e.timeLabel||'Time TBC')}</p></div></div>`}).join(''):'<p class="empty">Nothing planned</p>'}</div></article>`}).join('')}
 document.querySelector('#prev').onclick=()=>{dayOffset--;render()};document.querySelector('#next').onclick=()=>{dayOffset++;render()};document.querySelector('#today').onclick=()=>{dayOffset=0;render()};render();
+
+const escapeText=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// Calendar dates are local civil dates, as in the weekly renderer; noon avoids DST midnight edges.
+let monthAnchor=currentDay();monthAnchor.setDate(1);
+let selectedDate=currentDay();
+function monthDayCard(d){
+  let list=itemsFor(d),holiday=holidayFor(d),weather=WEATHER[iso(d)],weekend=d.getDay()===0||d.getDay()===6,today=iso(new Date());
+  return `<article class="day ${weekend?'weekend ':''}${holiday?'holiday ':''}${iso(d)===today?'today':''}"><div class="dayhead"><span>${d.toLocaleDateString('en-GB',{weekday:'short'})}</span><strong>${d.getDate()}</strong>${holiday?`<small class="holiday-label"><b>${holiday}</b><br>Public holiday</small>`:''}${weather?`<small class="weather">${weather.icon} ${weather.high}°/${weather.low}°</small>`:''}</div><div class="events">${list.length?list.map(e=>{let p=PEOPLE[e.person];let badge=e.birthday?'🎂 Birthday':e.homeGame?'⚽ Home':'';let main=`<div class="event" style="border-color:${p.color};background:${p.color}2B"><div class="eventtop"><span class="person" style="color:${p.color}">${p.name}</span>${badge?`<span class="type">${badge}</span>`:''}</div><h3>${e.title}</h3>${e.start?`<p class="time">${e.start}${e.end?'–'+e.end:''}${dur(e.start,e.end)?` <em>${dur(e.start,e.end)}</em>`:''}</p>`:!e.birthday?`<p class="time tbc">${e.timeLabel||'Time TBC'}</p>`:''}${e.note?`<p class="event-note">🎒 ${e.note}</p>`:''}</div>`;if(!e.responsible)return main;let adult=PEOPLE[e.responsible.toLowerCase()];return `<div class="eventpair">${main}<div class="event linked" style="border-color:${adult.color};background:${adult.color}22"><div class="eventtop"><span class="person" style="color:${adult.color}">${adult.name}</span><span class="type">Taking</span></div><h3>${e.linkedTitle||e.title}</h3><p class="time ${e.start?'':'tbc'}">${e.start?`${e.start}${e.end?'–'+e.end:''}`:(e.timeLabel||'Time TBC')}</p></div></div>`}).join(''):'<p class="empty">Nothing planned</p>'}</div></article>`
+}
+function renderMonth(){
+  const label=monthAnchor.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  document.querySelector('#month-heading').textContent=label;
+  const first=new Date(monthAnchor);first.setDate(1-((first.getDay()+6)%7));
+  const days=new Date(monthAnchor.getFullYear(),monthAnchor.getMonth()+1,0,12).getDate();
+  const cells=Math.ceil((((monthAnchor.getDay()+6)%7)+days)/7)*7;
+  const today=iso(currentDay());
+  document.querySelector('#month-grid').innerHTML=Array.from({length:cells},(_,i)=>{
+    const d=new Date(first);d.setDate(d.getDate()+i);
+    const key=iso(d),list=itemsFor(d),outside=d.getMonth()!==monthAnchor.getMonth(),holiday=holidayFor(d);
+    const dateLabel=d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    const count=list.length;
+    return `<button type="button" class="month-date ${outside?'outside ':''}${d.getDay()===0||d.getDay()===6?'weekend ':''}${holiday?'holiday ':''}${key===today?'today':''}" data-date="${key}" aria-pressed="${key===iso(selectedDate)}" ${key===today?'aria-current="date"':''} aria-label="${escapeText(dateLabel+(holiday?', '+holiday:'')+', '+count+(count===1?' event':' events'))}"><span class="date-number">${d.getDate()}</span><span class="month-count">${count?count+(count===1?' event':' events'):'—'}</span><span class="month-preview">${list.slice(0,2).map(e=>`<span style="border-color:${PEOPLE[e.person].color}">${escapeText((e.start?e.start+' ':'')+e.title)}</span>`).join('')}${count>2?`<span>+${count-2} more</span>`:''}</span></button>`;
+  }).join('');
+  document.querySelector('#month-agenda').innerHTML='<h3 class="selected-heading">'+selectedDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'</h3>'+monthDayCard(selectedDate);
+}
+function moveMonth(step){
+  monthAnchor.setDate(1);monthAnchor.setMonth(monthAnchor.getMonth()+step);
+  selectedDate=new Date(monthAnchor);renderMonth();
+}
+document.querySelector('#month-prev').onclick=()=>moveMonth(-1);
+document.querySelector('#month-next').onclick=()=>moveMonth(1);
+document.querySelector('#month-today').onclick=()=>{selectedDate=currentDay();monthAnchor=currentDay();monthAnchor.setDate(1);renderMonth()};
+document.querySelector('#month-grid').onclick=event=>{
+  const button=event.target.closest('button[data-date]');if(!button)return;
+  const [year,month,day]=button.dataset.date.split('-').map(Number);
+  selectedDate=new Date(year,month-1,day,12);
+  monthAnchor=new Date(year,month-1,1,12);renderMonth();
+  document.querySelector(`#month-grid button[data-date="${iso(selectedDate)}"]`).focus({preventScroll:true});
+};
+renderMonth();
+
 scheduleDashboardRefresh();
 refreshWeather();
 refreshWhenVisible();
