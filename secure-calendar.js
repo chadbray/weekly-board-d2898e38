@@ -183,6 +183,16 @@ ONCE.push({"date":"2026-10-23","title":"Playdate at Milan’s house","person":"t
 ONCE.push({"date":"2026-10-23","title":"Playdate at our house with Hailey","person":"penelope","start":"13:30"});
 ONCE.push({"date":"2026-11-15","title":"Jakob and Julia’s birthday party","person":"penelope","location":"Ballorig"});
 ONCE.push({"date":"2026-11-04","title":"Kita team Sitzung","person":"josie","start":"17:15"});
+ONCE.push({"date":"2027-01-13","title":"Swimming lessons","person":"timothy","start":"17:15","end":"18:00"});
+ONCE.push({"date":"2027-01-20","title":"Swimming lessons","person":"timothy","start":"17:15","end":"18:00"});
+ONCE.push({"date":"2027-01-27","title":"Swimming lessons","person":"timothy","start":"17:15","end":"18:00"});
+ONCE.push({"date":"2027-02-03","title":"Swimming lessons","person":"timothy","start":"17:15","end":"18:00"});
+ONCE.push({"date":"2027-02-10","title":"Swimming lessons","person":"timothy","start":"17:15","end":"18:00"});
+ONCE.push({"date":"2027-02-17","title":"Swimming lessons","person":"timothy","start":"17:15","end":"18:00"});
+ONCE.push({"date":"2027-02-24","title":"Swimming lessons","person":"timothy","start":"17:15","end":"18:00"});
+ONCE.push({"date":"2027-03-03","title":"Swimming lessons","person":"timothy","start":"17:15","end":"18:00"});
+ONCE.push({"date":"2027-03-10","title":"Swimming lessons","person":"timothy","start":"17:15","end":"18:00"});
+ONCE.push({"date":"2027-03-17","title":"Swimming lessons","person":"timothy","start":"17:15","end":"18:00"});
 async function unlockCalendar(){return true;}
 const pad=n=>String(n).padStart(2,'0'),iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),parse=s=>new Date(s+'T12:00:00'),monday=d=>{d=new Date(d);d.setHours(12,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d},mins=s=>{let[h,m]=s.split(':').map(Number);return h*60+m},dur=(a,b)=>{if(!a||!b)return'';let n=mins(b)-mins(a);return n>=60?Math.floor(n/60)+'h'+(n%60?' '+n%60+'m':''):n+'m'};
 function holidayFor(date){return (SETTINGS.holidays||{})[iso(date)]||''}
