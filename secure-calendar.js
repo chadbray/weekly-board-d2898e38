@@ -183,7 +183,7 @@ ONCE.push({"date":"2026-11-27","title":"Hair appointment","person":"timothy","st
 ONCE.push({"date":"2026-10-23","title":"Playdate at Milan’s house","person":"timothy","timeLabel":"After Kita"});
 ONCE.push({"date":"2026-10-23","title":"Playdate at our house with Hailey","person":"penelope","start":"13:30"});
 ONCE.push({"date":"2026-11-15","title":"Jakob and Julia’s birthday party","person":"penelope","location":"Ballorig"});
-ONCE.push({"date":"2026-11-04","title":"Kita team Sitzung","person":"josie","start":"17:15"});
+ONCE.push({"date":"2026-11-04","title":"Kita team Sitzung","person":"josie","start":"17:30"});
 ONCE.push({"date":"2027-01-13","title":"Swimming lessons","person":"timothy","start":"17:15","end":"18:00"});
 ONCE.push({"date":"2027-01-20","title":"Swimming lessons","person":"timothy","start":"17:15","end":"18:00"});
 ONCE.push({"date":"2027-01-27","title":"Swimming lessons","person":"timothy","start":"17:15","end":"18:00"});
