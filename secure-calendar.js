@@ -184,6 +184,7 @@ ONCE.push({"date":"2026-10-23","title":"Playdate at Milan’s house","person":"t
 ONCE.push({"date":"2026-10-23","title":"Playdate at our house with Hailey","person":"penelope","start":"13:30"});
 ONCE.push({"date":"2026-11-15","title":"Jakob and Julia’s birthday party","person":"penelope","location":"Ballorig"});
 ONCE.push({"date":"2026-11-04","title":"Kita team Sitzung","person":"josie","start":"17:30"});
+ONCE.push({"date":"2026-11-28","title":"Jonah’s birthday party","person":"timothy","location":"Ballorig","start":"11:00","end":"14:00"});
 ONCE.push({"date":"2027-01-13","title":"Swimming lessons","person":"timothy","start":"17:15","end":"18:00"});
 ONCE.push({"date":"2027-01-20","title":"Swimming lessons","person":"timothy","start":"17:15","end":"18:00"});
 ONCE.push({"date":"2027-01-27","title":"Swimming lessons","person":"timothy","start":"17:15","end":"18:00"});
