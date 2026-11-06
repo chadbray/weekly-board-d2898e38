@@ -205,3 +205,5 @@ async function getWeather(){const config=SETTINGS.weather||{};const params=new U
 function scheduleDashboardRefresh(){const now=new Date(),next=new Date(now);next.setSeconds(0,0);next.setMinutes(0);next.setHours(now.getHours()+1);if(next.getHours()>22){next.setDate(next.getDate()+1);next.setHours(7,0,0,0)}else if(next.getHours()<7){next.setHours(7,0,0,0)}setTimeout(()=>location.reload(),Math.max(1000,next-now))}
 function refreshWhenVisible(){let wasHidden=false;document.addEventListener('visibilitychange',()=>{if(document.hidden){wasHidden=true}else if(wasHidden){location.reload()}});window.addEventListener('pageshow',event=>{if(event.persisted)location.reload()})}
 ONCE.push({"date":"2026-11-11","title":"Sales meeting","person":"josie","start":"19:00","location":"Aachen"});
+
+ONCE.push({"date":"2026-12-10","title":"HEAD girls Christmas market & dinner","person":"josie","start":"17:30"});
